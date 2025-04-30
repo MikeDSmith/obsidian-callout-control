@@ -3,20 +3,77 @@
 ![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Obsidian v1.5+](https://img.shields.io/badge/obsidian-1.5%2B-blueviolet)
 
-**Callout Control** is a lightweight plugin for [Obsidian](https://obsidian.md) that visually toggles, collapses, or expands visible callouts in **Live Preview** mode, allowing you to quickly control all callouts using the keyboard — no mouse clicks required.
+**Callout Control** is a lightweight plugin for [Obsidian](https://obsidian.md) that lets you quickly **toggle, collapse, or expand** callouts directly in **Live Preview** — all using keyboard commands.
+
+Control can be applied:
+- 🎯 **Uniformly** — All callouts follow the same state (e.g., expand all)
+- 🎛️ **Individually** — Each callout is toggled based on its own current state
 
 ---
 
 ## ✨ Features
 
-_Note: This plugin is designed for **Live Preview mode** only._
+> ✅ Visual toggling works in **Live Preview** mode only.  
+> ✏️ Markdown-updating commands work in **any editing mode**, including Source Mode.
 
-- 🔁 **Toggle** — Toggle all currently visible callouts between expanded and collapsed states.
-- 🔽 **Collapse** — Collapse all visible callouts.
-- 🔼 **Expand** — Expand all visible callouts.
-- 🖼️ Purely visual: DOM manipulation only, with no impact on your note files.
+- Toggle, collapse, or expand:
+  - All visible callouts
+  - Only the callout under your cursor
+  - All callouts in the current section
+- Use different commands to apply:
+  - 🎯 **Uniform behavior** — All callouts follow the same state
+  - 🎛️ **Individual behavior** — Each callout toggles independently based on its current state
+- Optional: sync visual state to Markdown by updating `+` / `-` after the callout tag
+- Purely visual (DOM-based), unless you choose to update the Markdown
 
-> ⚠️ Only affects callouts currently rendered on screen. Due to Obsidian’s virtual scrolling, off-screen callouts may not be toggled unless scrolled into view.
+> ⚠️ **Visual commands** only affect callouts currently rendered on screen.  
+> Off-screen callouts must be scrolled into view due to Obsidian’s virtual scrolling.  
+> ✏️ **Markdown commands** update the entire file and work regardless of scroll position.
+
+---
+
+## 🧮 Command Overview
+
+| Scope   | Action   | Visual Only                      | With Markdown                              |
+|---------|----------|----------------------------------|---------------------------------------------|
+| All     | Toggle   | Toggle All Callouts (Uniform)    | Toggle All Callouts (Individually)          |
+| All     | Collapse | Collapse All Callouts (Uniform)  | Collapse All Callouts (Uniform)             |
+| All     | Expand   | Expand All Callouts (Uniform)    | Expand All Callouts (Uniform)               |
+| Current | Toggle   | Toggle Current Callout           | Toggle Current Callout (with Markdown)      |
+| Current | Collapse | Collapse Current Callout         | Collapse Current Callout (with Markdown)    |
+| Current | Expand   | Expand Current Callout           | Expand Current Callout (with Markdown)      |
+| Section | Toggle   | Toggle Section Callouts          | Toggle Section Callouts (with Markdown)     |
+| Section | Collapse | Collapse Section Callouts        | Collapse Section Callouts (with Markdown)   |
+| Section | Expand   | Expand Section Callouts          | Expand Section Callouts (with Markdown)     |
+
+---
+
+## 🔄 Toggle Behavior
+
+| Mode              | Description                                                                |
+|-------------------|----------------------------------------------------------------------------|
+| 🎯 **Uniform**     | All affected callouts are set to the same state (e.g., all collapsed)      |
+| 🎛️ **Individual** | Each callout toggles based on its current state (expanded ↔ collapsed)     |
+
+> 🔍 **Note on Toggle All (with Markdown):**  
+> Unlike the visual toggle (which applies a uniform state), the markdown version toggles each callout based on its own current state (`+` or `-`).  
+> This allows for fine-grained toggling but can result in a mix of expanded and collapsed callouts.  
+> This is the current behavior and may be refined in future updates based on user feedback.
+
+Uniform behavior is ideal for quickly resetting or focusing; individual is ideal for browsing and interaction.
+
+---
+
+## 🎹 Example Hotkeys
+
+These are the hotkeys used by the author:
+
+- 🔽 Collapse: `Shift` + `Cmd` + `<`
+- 🔼 Expand: `Shift` + `Cmd` + `>`
+- 🔁 Toggle: `Shift` + `Cmd` + `/`
+
+You can customize hotkeys under  
+**Settings → Community Plugins → Hotkeys → Callout Control**
 
 ---
 
@@ -41,45 +98,32 @@ _Note: This plugin is designed for **Live Preview mode** only._
 
 ---
 
-## 🎹 Example Hotkeys
-
-These are the hotkeys used by the author:
-
-- 🔽 Collapse: `Shift` + `Cmd` + `<`
-- 🔼 Expand: `Shift` + `Cmd` + `>`
-- 🔁 Toggle: `Shift` + `Cmd` + `/`
-
-Set your own under **Settings → Community Plugins → Hotkeys**.
-
----
-
 ## ✅ Compatibility
 
-- Works in **Live Preview** mode (not Reading View).
-- Tested with Obsidian v1.5 and higher.
+- Requires Obsidian **v1.5+**
+- Supports **Live Preview** mode only
 
 ---
 
 ## 📘 Learn More
 
-To learn more about installing and managing Obsidian community plugins, see the official documentation:  
+To learn more about installing and managing Obsidian community plugins, see the official docs:  
 [Obsidian Community Plugins Guide](https://help.obsidian.md/Plugins/Community+plugins)
 
 ---
 
-## 🤝 Contributing
+## 🙌 Author
 
-Feedback, suggestions, and pull requests are welcome! Feel free to open an issue or submit improvements.
+Created by **Mike D. Smith**
+
+---
+
+## 🤝 Acknowledgements
+
+- Built with the assistance of **ChatGPT** for brainstorming, implementation, and documentation refinement.
 
 ---
 
 ## 📝 License
 
 [MIT License](LICENSE)
-
----
-
-## 🙌 Author
-
-Created by **Mike D. Smith**  
-With help from ChatGPT
