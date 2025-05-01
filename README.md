@@ -2,7 +2,7 @@
 
 ![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Obsidian v1.5+](https://img.shields.io/badge/obsidian-1.5%2B-blueviolet)
-![Release v1.0.1](https://img.shields.io/badge/release-v1.0.1-green)
+![Release v1.0.2](https://img.shields.io/badge/release-v1.0.2-green)
 
 > Control callouts with keyboard shortcuts in Obsidian's Live Preview mode
 
@@ -53,7 +53,7 @@ The plugin is currently in development and not yet available in the Obsidian Com
 
 ### From GitHub
 
-1. Download the [latest release](https://github.com/MikeDSmith/obsidian-callout-control/releases) or download directly: [v1.0.1](https://github.com/MikeDSmith/obsidian-callout-control/releases/download/v1.0.1/obsidian-callout-control-v1.0.1.zip)
+1. Download the [latest release](https://github.com/MikeDSmith/obsidian-callout-control/releases)
 2. Create a folder in your vault's plugin directory: `.obsidian/plugins/obsidian-callout-control/`
 3. Extract `main.js` and `manifest.json` into that folder
 4. In Obsidian, go to **Settings → Community Plugins**, click **Reload plugins** and enable **Callout Control**

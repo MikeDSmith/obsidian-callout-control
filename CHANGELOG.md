@@ -29,3 +29,28 @@
 
 ### Removed
 - Inline version comment from `main.js` (now tracked via Git and manifest)
+
+## [1.0.2] - 2024-05-01
+
+### Added
+- Comprehensive code refactoring with new classes:
+  - `ObsidianCalloutDetector` for markdown callout parsing
+  - `CalloutMatcher` to bridge DOM elements with markdown
+- Support for nested callouts detection and handling
+- Improved callout targeting with precise cursor positioning
+- Demonstration GIFs in README showing plugin functionality
+- Expanded documentation with:
+  - Quick start guide
+  - Table of contents
+  - Installation instructions
+  - Usage examples and recommended hotkeys
+  - FAQ and troubleshooting sections
+  - Compatibility information
+
+### Changed
+- Extensively improved callout detection algorithm
+- Enhanced section detection for more accurate scoping
+- Refined command labels for clarity (e.g., "Toggle Current Callout (Visual Only)")
+- Optimized DOM operations for better performance
+- Updated README with clearer organization and visual examples
+- Improved error handling for more robust operation

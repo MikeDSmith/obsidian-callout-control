@@ -1,7 +1,7 @@
 {
   "id": "obsidian-callout-control",
   "name": "Callout Control",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "minAppVersion": "0.15.0",
   "description": "Adds commands to toggle, collapse, or expand visible callouts in Live Preview without modifying the file.",
   "author": "Mike D. Smith",
