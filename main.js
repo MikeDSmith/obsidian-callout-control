@@ -3,17 +3,177 @@ const { Plugin } = require('obsidian');
 // Obsidian plugin to toggle, collapse, or expand callouts in Live Preview,
 // with optional syncing to Markdown (+/-) indicators.
 
-function getCalloutTitleMap(root) {
-  const callouts = root.querySelectorAll('.callout');
-  const map = new Map();
-  callouts.forEach(callout => {
-    const titleEl = callout.querySelector('.callout-title-inner');
-    const title = titleEl?.textContent?.trim();
-    if (title) map.set(title, callout);
-  });
-  return map;
+// Regular expression to identify callout patterns in Markdown
+const CALLOUT_REGEX = />\s*\[!([\w-]+)\]([+-])\s*(.*)/;
+
+/**
+ * Callout matcher that stores information about both DOM and Markdown representation
+ * of callouts to enable more reliable syncing between them.
+ */
+class CalloutMatcher {
+  constructor(editor, root) {
+    this.editor = editor;
+    this.root = root;
+    this.calloutMap = new Map(); // Maps from unique IDs to callout info
+    this.refreshCallouts();
+  }
+
+  /**
+   * Refreshes the callout information map by scanning both DOM and Markdown
+   */
+  refreshCallouts() {
+    if (!this.editor || !this.root) return;
+    
+    const lines = this.editor.getValue().split('\n');
+    const callouts = this.root.querySelectorAll('.callout');
+    this.calloutMap.clear();
+    
+    // First pass: collect all markdown callouts with their line numbers and titles
+    const markdownCallouts = [];
+    for (let i = 0; i < lines.length; i++) {
+      const match = lines[i].match(CALLOUT_REGEX);
+      if (match) {
+        const type = match[1]; // callout type (note, info, warning, etc.)
+        const collapseState = match[2]; // + or -
+        const title = match[3].trim(); // title text
+        
+        markdownCallouts.push({
+          lineIndex: i,
+          type,
+          isCollapsed: collapseState === '-',
+          title,
+          fullLine: lines[i]
+        });
+      }
+    }
+    
+    // Second pass: match DOM callouts with markdown callouts
+    callouts.forEach((callout, index) => {
+      const titleEl = callout.querySelector('.callout-title-inner');
+      const title = titleEl?.textContent?.trim() || '';
+      const type = callout.getAttribute('data-callout') || '';
+      const isCollapsed = callout.classList.contains('is-collapsed');
+      
+      // Generate a unique ID for this callout
+      const uniqueId = `callout-${index}`;
+      
+      // Try to find a corresponding markdown callout
+      const matchingMarkdownCallout = this.findMatchingMarkdownCallout(
+        markdownCallouts, 
+        title, 
+        type, 
+        isCollapsed
+      );
+      
+      // Store information about this callout for later use
+      this.calloutMap.set(uniqueId, {
+        domElement: callout,
+        title,
+        type,
+        isCollapsed,
+        markdownLineIndex: matchingMarkdownCallout?.lineIndex,
+        fullLine: matchingMarkdownCallout?.fullLine
+      });
+    });
+  }
+  
+  /**
+   * Find the best matching markdown callout for a DOM callout
+   * using multiple attributes for more reliable matching
+   */
+  findMatchingMarkdownCallout(markdownCallouts, title, type, isCollapsed) {
+    // First try: exact match on title and type and collapse state
+    let match = markdownCallouts.find(c => 
+      c.title === title && 
+      c.type === type && 
+      c.isCollapsed === isCollapsed
+    );
+    
+    if (match) return match;
+    
+    // Second try: match on title and type only
+    match = markdownCallouts.find(c => 
+      c.title === title && 
+      c.type === type
+    );
+    
+    if (match) return match;
+    
+    // Third try: match on title only (less reliable)
+    match = markdownCallouts.find(c => c.title === title);
+    
+    if (match) return match;
+    
+    // Fourth try: fuzzy title match as last resort
+    // This helps with titles that might have slight formatting differences
+    return markdownCallouts.find(c => 
+      title.includes(c.title) || 
+      c.title.includes(title)
+    );
+  }
+  
+  /**
+   * Get all callout elements that have been matched
+   */
+  getAllCallouts() {
+    return Array.from(this.calloutMap.values())
+      .filter(info => info.domElement);
+  }
+  
+  /**
+   * Get callout element at a specific line number
+   */
+  getCalloutAtLine(lineNumber) {
+    return Array.from(this.calloutMap.values())
+      .find(info => info.markdownLineIndex === lineNumber);
+  }
+  
+  /**
+   * Get all callouts between startLine and endLine (inclusive)
+   */
+  getCalloutsInRange(startLine, endLine) {
+    return Array.from(this.calloutMap.values())
+      .filter(info => 
+        info.markdownLineIndex !== undefined && 
+        info.markdownLineIndex >= startLine && 
+        info.markdownLineIndex <= endLine
+      );
+  }
+  
+  /**
+   * Update the Markdown representation of a callout
+   */
+  updateMarkdownCollapseState(calloutInfo, newCollapsedState) {
+    if (calloutInfo.markdownLineIndex === undefined || !this.editor) return false;
+    
+    const lines = this.editor.getValue().split('\n');
+    const line = lines[calloutInfo.markdownLineIndex];
+    
+    // Replace the collapse indicator (+ or -) with the new state
+    const updatedLine = line.replace(
+      CALLOUT_REGEX, 
+      (_, type, symbol, title) => `> [!${type}]${newCollapsedState ? '-' : '+'} ${title}`
+    );
+    
+    if (updatedLine !== line) {
+      this.editor.replaceRange(
+        updatedLine, 
+        { line: calloutInfo.markdownLineIndex, ch: 0 }, 
+        { line: calloutInfo.markdownLineIndex, ch: line.length }
+      );
+      // Update our stored information
+      calloutInfo.fullLine = updatedLine;
+      calloutInfo.isCollapsed = newCollapsedState;
+      return true;
+    }
+    
+    return false;
+  }
 }
 
+/**
+ * Apply collapse/expand state to a callout DOM element
+ */
 function applyCalloutCollapseState(callout, collapsed) {
   const content = callout.querySelector('.callout-content');
   const foldIcon = callout.querySelector('.callout-fold');
@@ -67,48 +227,41 @@ module.exports = class CalloutControlPlugin extends Plugin {
     this.registerCommand('collapse-section-with-markdown', 'Collapse Section Callouts (with Markdown)', () => this.toggleSectionCallouts('collapse'));
     this.registerCommand('expand-section-with-markdown', 'Expand Section Callouts (with Markdown)', () => this.toggleSectionCallouts('expand'));
   }
+
+  // Create a fresh callout matcher for the current editor
+  getCalloutMatcher() {
+    const editor = this.app.workspace.activeEditor?.editor;
+    const root = this.app.workspace.activeEditor?.containerEl;
+    if (!editor || !root) return null;
+    
+    return new CalloutMatcher(editor, root);
+  }
+
   // Uniformly toggle/collapse/expand all visible callouts in the DOM.
   // Optionally updates Markdown symbols if modifyMarkdown is true.
   processCallouts(mode, modifyMarkdown = false) {
-    const root = this.app.workspace.activeEditor?.containerEl;
-    if (!root) return;
+    const matcher = this.getCalloutMatcher();
+    if (!matcher) return;
 
-    const editor = modifyMarkdown ? this.app.workspace.activeEditor?.editor : null;
-    const lines = editor ? editor.getValue().split('\n') : [];
-
-    const callouts = root.querySelectorAll('.callout');
+    const callouts = matcher.getAllCallouts();
     if (!callouts.length) return;
 
     // Determine uniform collapsed state to apply to all callouts.
-    // 'toggle' uses the opposite of the first callout’s state.
+    // 'toggle' uses the opposite of the first callout's state.
     const shouldCollapse =
       mode === 'toggle'
-        ? !callouts[0].classList.contains('is-collapsed')
+        ? !callouts[0].domElement.classList.contains('is-collapsed')
         : mode === 'collapse';
 
     try {
       // Apply the visual state change to each rendered callout
-      callouts.forEach(callout => {
+      callouts.forEach(calloutInfo => {
         // Apply the determined uniform state visually
-        applyCalloutCollapseState(callout, shouldCollapse);
+        applyCalloutCollapseState(calloutInfo.domElement, shouldCollapse);
 
-        if (modifyMarkdown && editor && lines.length) {
-          const titleEl = callout.querySelector('.callout-title-inner');
-          const title = titleEl?.textContent?.trim();
-          if (title) {
-            // Find the corresponding markdown line by searching for the title text.
-            // Note: This might be unreliable if titles are not unique or contain special characters.
-            for (let i = 0; i < lines.length; i++) {
-              if (lines[i].includes(title)) {
-                const updatedLine = lines[i].replace(/\[!([\w-]+)\]([+-])/, (_, type, symbol) =>
-                  // Update Markdown symbol based on the uniform state
-                  `[!${type}]${shouldCollapse ? '-' : '+'}`
-                );
-                editor.replaceRange(updatedLine, { line: i, ch: 0 }, { line: i, ch: lines[i].length });
-                break;
-              }
-            }
-          }
+        if (modifyMarkdown) {
+          // Update Markdown representation
+          matcher.updateMarkdownCollapseState(calloutInfo, shouldCollapse);
         }
       });
     } catch (err) {
@@ -119,36 +272,19 @@ module.exports = class CalloutControlPlugin extends Plugin {
 
   // Toggle each visible callout independently, both visually and in Markdown.
   toggleWithMarkdown() {
-    const editor = this.app.workspace.activeEditor?.editor;
-    const root = this.app.workspace.activeEditor?.containerEl;
-    if (!editor || !root) return;
+    const matcher = this.getCalloutMatcher();
+    if (!matcher) return;
 
-    const callouts = root.querySelectorAll('.callout');
     try {
-      callouts.forEach(callout => {
-        const isCollapsed = callout.classList.contains('is-collapsed');
+      matcher.getAllCallouts().forEach(calloutInfo => {
+        const isCollapsed = calloutInfo.domElement.classList.contains('is-collapsed');
         const newCollapsedState = !isCollapsed;
 
         // Toggle DOM state
-        applyCalloutCollapseState(callout, newCollapsedState);
+        applyCalloutCollapseState(calloutInfo.domElement, newCollapsedState);
 
-        // Attempt to match the markdown line by callout title text
-        const titleEl = callout.querySelector('.callout-title-inner');
-        const title = titleEl?.textContent?.trim();
-        if (!title) return;
-
-        const lines = editor.getValue().split('\n');
-        // Find the corresponding markdown line by searching for the title text.
-        // Note: This might be unreliable if titles are not unique or contain special characters.
-        for (let i = 0; i < lines.length; i++) {
-          if (lines[i].includes(title)) {
-            const updatedLine = lines[i].replace(/\[!([\w-]+)\]([+-])/, (_, type, symbol) =>
-              `[!${type}]${symbol === '+' ? '-' : '+'}`
-            );
-            editor.replaceRange(updatedLine, { line: i, ch: 0 }, { line: i, ch: lines[i].length });
-            break;
-          }
-        }
+        // Update Markdown representation
+        matcher.updateMarkdownCollapseState(calloutInfo, newCollapsedState);
       });
     } catch (err) {
       // Prevent plugin crashes on unexpected DOM errors
@@ -159,65 +295,52 @@ module.exports = class CalloutControlPlugin extends Plugin {
   // Toggle/collapse/expand the callout under the cursor. Optionally syncs to Markdown.
   toggleCurrentCallout(mode = 'toggle', modifyMarkdown = true) {
     const editor = this.app.workspace.activeEditor?.editor;
-    const root = this.app.workspace.activeEditor?.containerEl;
-    if (!editor || !root) return;
+    if (!editor) return;
 
-    // Cache callouts and their titles to minimize DOM reads
-    const calloutTitleMap = getCalloutTitleMap(root);
+    const matcher = this.getCalloutMatcher();
+    if (!matcher) return;
 
     const cursor = editor.getCursor();
     let lineIndex = cursor.line;
     const lines = editor.getValue().split('\n');
 
-    // Check if this line is a callout line with a [+] or [-] indicator
+    // Find the closest callout line from current cursor position (going upward)
     while (lineIndex >= 0) {
-      const line = lines[lineIndex];
-      // Check if line looks like a callout start line
-      if (line.trim().startsWith('> [!') && /[+-]/.test(line)) {
+      const calloutInfo = matcher.getCalloutAtLine(lineIndex);
+      if (calloutInfo) {
         // Determine new collapsed state based on mode
         let newCollapsedState;
         if (mode === 'collapse') {
           newCollapsedState = true;
         } else if (mode === 'expand') {
           newCollapsedState = false;
-        } else {
-          newCollapsedState = !line.includes('-');
+        } else { // toggle
+          newCollapsedState = !calloutInfo.domElement.classList.contains('is-collapsed');
         }
 
+        // Update DOM state
+        applyCalloutCollapseState(calloutInfo.domElement, newCollapsedState);
+        
+        // Optionally update Markdown
         if (modifyMarkdown) {
-          // Update the markdown line with the new collapsed state symbol
-          const updatedLine = line.replace(/\[!([\w-]+)\]([+-])/, (_, type, symbol) => {
-            if (mode === 'collapse') return `[!${type}]-`;
-            if (mode === 'expand') return `[!${type}]+`;
-            return `[!${type}]${symbol === '+' ? '-' : '+'}`;
-          });
-          editor.replaceRange(updatedLine, { line: lineIndex, ch: 0 }, { line: lineIndex, ch: line.length });
-        }
-
-        // Also update DOM if visible
-        // Find the corresponding DOM element by searching for the title text in the line.
-        // Note: This might be unreliable if titles are not unique or contain special characters.
-        const titleMatch = [...calloutTitleMap.keys()].find(title => line.includes(title));
-        if (titleMatch) {
-          const callout = calloutTitleMap.get(titleMatch);
-          applyCalloutCollapseState(callout, newCollapsedState);
+          matcher.updateMarkdownCollapseState(calloutInfo, newCollapsedState);
         }
         break;
       }
       lineIndex--;
     }
   }
+
   // Toggle/collapse/expand all callouts within the current Markdown section.
   // Optionally updates the corresponding Markdown lines.
   toggleSectionCallouts(mode = 'toggle', modifyMarkdown = true) {
     const editor = this.app.workspace.activeEditor?.editor;
-    const root = this.app.workspace.activeEditor?.containerEl;
-    if (!editor || !root) return;
+    if (!editor) return;
+
+    const matcher = this.getCalloutMatcher();
+    if (!matcher) return;
 
     try {
-      // Cache callouts and their titles to minimize DOM reads
-      const calloutTitleMap = getCalloutTitleMap(root);
-
       const cursor = editor.getCursor();
       const lines = editor.getValue().split('\n');
       let startLine = cursor.line;
@@ -233,38 +356,27 @@ module.exports = class CalloutControlPlugin extends Plugin {
         endLine++;
       }
 
-      const calloutLines = [];
-      // Collect all callout start lines within the section
-      for (let i = startLine + 1; i < endLine; i++) {
-        if (lines[i].trim().startsWith('> [!') && /[+-]/.test(lines[i])) {
-          calloutLines.push(i);
-        }
-      }
-
-      calloutLines.forEach(i => {
+      // Get all callouts within this section
+      const sectionCallouts = matcher.getCalloutsInRange(startLine, endLine - 1);
+      
+      // No action if no callouts found
+      if (!sectionCallouts.length) return;
+      
+      // Determine the action based on mode
+      sectionCallouts.forEach(calloutInfo => {
+        const isCollapsed = calloutInfo.domElement.classList.contains('is-collapsed');
+        const newCollapsedState = mode === 'collapse'
+          ? true
+          : mode === 'expand'
+          ? false
+          : !isCollapsed;
+        
+        // Update DOM state
+        applyCalloutCollapseState(calloutInfo.domElement, newCollapsedState);
+        
+        // Optionally update Markdown
         if (modifyMarkdown) {
-          // Update the markdown line with the new collapsed state symbol
-          const updatedLine = lines[i].replace(/\[!([\w-]+)\]([+-])/, (_, type, symbol) => {
-            if (mode === 'collapse') return `[!${type}]-`;
-            if (mode === 'expand') return `[!${type}]+`;
-            return `[!${type}]${symbol === '+' ? '-' : '+'}`;
-          });
-          editor.replaceRange(updatedLine, { line: i, ch: 0 }, { line: i, ch: lines[i].length });
-        }
-
-        // Also update DOM if visible
-        // Find the corresponding DOM element by searching for the title text in the line.
-        // Note: This might be unreliable if titles are not unique or contain special characters.
-        const matchedTitle = [...calloutTitleMap.keys()].find(title => lines[i].includes(title));
-        if (matchedTitle) {
-          const callout = calloutTitleMap.get(matchedTitle);
-          const isCollapsed = callout.classList.contains('is-collapsed');
-          const newCollapsedState = mode === 'collapse'
-            ? true
-            : mode === 'expand'
-            ? false
-            : !isCollapsed;
-          applyCalloutCollapseState(callout, newCollapsedState);
+          matcher.updateMarkdownCollapseState(calloutInfo, newCollapsedState);
         }
       });
     } catch (err) {
