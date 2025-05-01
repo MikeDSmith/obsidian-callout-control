@@ -174,15 +174,66 @@ class CalloutMarkdownService {
     );
     
     if (updatedLine !== startLine) {
-      this.editor.replaceRange(
-        updatedLine,
-        { line: callout.startLine, ch: 0 },
-        { line: callout.startLine, ch: startLine.length }
-      );
+      // Use transaction API instead of direct replaceRange
+      const transaction = this.editor.transaction({
+        changes: [
+          {
+            from: { line: callout.startLine, ch: 0 },
+            to: { line: callout.startLine, ch: startLine.length },
+            text: updatedLine
+          }
+        ]
+      });
+      transaction.apply();
       return true;
     }
     
     return false;
+  }
+  
+  /**
+   * Update multiple callouts in a single transaction
+   * 
+   * @param {Array<CalloutInfo>} callouts - The callouts to update
+   * @param {boolean|Array<boolean>} newStates - Either a single boolean state or array of states
+   * @returns {boolean} True if update was successful
+   */
+  updateMultipleCallouts(callouts, newStates) {
+    if (!this.editor || !callouts.length) return false;
+    
+    // Prepare the changes for all callouts
+    const changes = callouts.map((callout, index) => {
+      // Get the current line
+      const lines = this.editor.getValue().split('\n');
+      const line = lines[callout.startLine];
+      if (!line) return null;
+      
+      // Determine the new state for this callout
+      const newState = Array.isArray(newStates) ? newStates[index] : newStates;
+      
+      // Create the updated line
+      const updatedLine = line.replace(
+        this.CALLOUT_REGEX,
+        (_, type, collapse, title) => `> [!${type}]${newState ? '-' : '+'} ${title}`
+      );
+      
+      // Return the change object if the line actually changed
+      if (updatedLine !== line) {
+        return {
+          from: { line: callout.startLine, ch: 0 },
+          to: { line: callout.startLine, ch: line.length },
+          text: updatedLine
+        };
+      }
+      return null;
+    }).filter(change => change !== null); // Remove any null entries
+    
+    if (changes.length === 0) return false;
+    
+    // Create and apply the transaction
+    const transaction = this.editor.transaction({ changes });
+    transaction.apply();
+    return true;
   }
   
   /**
@@ -746,24 +797,24 @@ module.exports = class CalloutControlPlugin extends Plugin {
       const sortedCallouts = [...callouts].sort((a, b) => b.startLine - a.startLine);
       
       // Determine collapse state based on mode
-      let getNewState;
+      let newStates;
+      
       if (mode === 'collapse') {
-        getNewState = () => true;
+        newStates = true; // All collapsed
       } else if (mode === 'expand') {
-        getNewState = () => false;
+        newStates = false; // All expanded
       } else if (mode === 'toggle-individual') {
-        getNewState = (callout) => !callout.isCollapsed;
+        // Toggle each callout individually
+        newStates = sortedCallouts.map(callout => !callout.isCollapsed);
       } else { // uniform toggle
         // Count current collapse states to determine majority
         const collapsedCount = callouts.filter(c => c.isCollapsed).length;
         const shouldCollapse = collapsedCount < callouts.length / 2;
-        getNewState = () => shouldCollapse;
+        newStates = shouldCollapse; // Same state for all
       }
       
-      // Update each callout
-      sortedCallouts.forEach(callout => {
-        markdownService.updateCalloutCollapseState(callout, getNewState(callout));
-      });
+      // Use the batch update method
+      markdownService.updateMultipleCallouts(sortedCallouts, newStates);
       
       return;
     }
