@@ -1,38 +1,25 @@
 const { Plugin } = require('obsidian');
 
-// Obsidian plugin to toggle, collapse, or expand callouts in Live Preview,
-// with optional syncing to Markdown (+/-) indicators.
-// Enhanced to work in both Live Preview and Markdown modes.
-
 // Regular expression to identify callout patterns in Markdown
 const CALLOUT_REGEX = /^>\s*\[!([\w-]+)\]([+-]?)\s*(.*)/;
 
 /**
- * Obsidian-specific callout detector that handles:
- * - Multi-line callouts
- * - Nested callouts
- * - Standard Obsidian callout format only
- * 
- * Provides utilities for finding, processing, and updating callouts
- * in the Markdown document.
+ * Core CalloutService that handles the Markdown parsing and manipulation
+ * This class is responsible for all Markdown-related operations
  */
-class ObsidianCalloutDetector {
+class CalloutMarkdownService {
   /**
-   * Creates a new callout detector instance
+   * Creates a new callout markdown service
    * 
    * @param {Editor} editor - The Obsidian editor instance to work with
    */
   constructor(editor) {
     this.editor = editor;
-    // Standard Obsidian callout format: > [!type]± Title
     this.CALLOUT_REGEX = CALLOUT_REGEX;
   }
 
   /**
    * Detect all callouts in the document with their full structure
-   * 
-   * Scans the entire document for callouts, processing each one to determine
-   * its structure, content, and state. Handles nested callouts correctly.
    * 
    * @returns {Array<CalloutInfo>} Array of detected callouts with detailed structure
    */
@@ -43,14 +30,11 @@ class ObsidianCalloutDetector {
     const lines = content.split('\n');
     const callouts = [];
     
-    // Process the document line by line
     for (let i = 0; i < lines.length; i++) {
-      // If we find a callout start line
       if (this.isCalloutStartLine(lines[i])) {
         const callout = this.processCallout(lines, i);
         if (callout) {
           callouts.push(callout);
-          // Skip to the end of this callout
           i = callout.endLine;
         }
       }
@@ -62,8 +46,6 @@ class ObsidianCalloutDetector {
   /**
    * Determine if a line starts a callout block
    * 
-   * Uses the callout regex pattern to identify the starting line of a callout.
-   * 
    * @param {string} line - The line to check
    * @returns {boolean} True if this is a callout start line
    */
@@ -74,22 +56,16 @@ class ObsidianCalloutDetector {
   /**
    * Check if a line continues a callout block
    * 
-   * A continuation line starts with '>' but is not a callout start line.
-   * 
    * @param {string} line - The line to check
    * @returns {boolean} True if this is a callout continuation line
    */
   isCalloutContinuationLine(line) {
     const trimmed = line.trim();
-    // Callout content lines start with >
     return trimmed.startsWith('>') && !this.isCalloutStartLine(line);
   }
   
   /**
    * Process a callout starting at the given line
-   * 
-   * Extracts callout metadata (type, title, collapse state), determines its
-   * boundaries, processes content, and detects nested callouts.
    * 
    * @param {Array<string>} lines - All document lines
    * @param {number} startLineIndex - The line where the callout starts
@@ -98,7 +74,6 @@ class ObsidianCalloutDetector {
   processCallout(lines, startLineIndex) {
     const startLine = lines[startLineIndex];
     
-    // Extract callout details
     const match = startLine.match(this.CALLOUT_REGEX);
     if (!match) return null;
     
@@ -106,35 +81,28 @@ class ObsidianCalloutDetector {
     const collapseState = match[2] || '';
     const title = match[3].trim();
     
-    // Normalize collapse state (default is expanded)
     const isCollapsed = collapseState === '-';
     
-    // Find the end of this callout and collect content
     const contentLines = [];
     let currentLine = startLineIndex + 1;
     let endLine = startLineIndex;
     let nesting = 0;
     
-    // Process until we find the end of the callout
     while (currentLine < lines.length) {
       const line = lines[currentLine];
       
       if (this.isCalloutStartLine(line)) {
-        // Found nested callout
         nesting++;
         contentLines.push(line);
       } 
       else if (this.isCalloutContinuationLine(line)) {
-        // Still in the callout
         contentLines.push(line);
       }
       else {
-        // Not a callout line - might be the end or a nested callout end
         if (nesting > 0) {
           nesting--;
           contentLines.push(line);
         } else {
-          // End of the callout
           endLine = currentLine - 1;
           break;
         }
@@ -143,35 +111,29 @@ class ObsidianCalloutDetector {
       currentLine++;
     }
     
-    // If we reached the end of the document
     if (currentLine >= lines.length) {
       endLine = lines.length - 1;
     }
     
-    // Extract clean content (without the > prefix)
     const content = contentLines.map(line => {
       const match = line.match(/^>\s?(.*)/);
       return match ? match[1] : line;
     }).join('\n');
     
-    // Detect nested callouts within the content
     const nestedCallouts = [];
     let contentLinesForNested = contentLines.slice();
     let nestedStartLine = 0;
     
     while (nestedStartLine < contentLinesForNested.length) {
       if (this.isCalloutStartLine(contentLinesForNested[nestedStartLine])) {
-        // Create a temporary array of lines for the nested callout processing
         const nestedLines = contentLinesForNested.slice(nestedStartLine);
         const nested = this.processCallout(nestedLines, 0);
         
         if (nested) {
-          // Adjust line numbers to be relative to the parent document
           nested.startLine += startLineIndex + 1 + nestedStartLine;
           nested.endLine += startLineIndex + 1 + nestedStartLine;
           
           nestedCallouts.push(nested);
-          // Skip to after this nested callout
           nestedStartLine += nested.endLine - nested.startLine + 1;
         } else {
           nestedStartLine++;
@@ -196,9 +158,6 @@ class ObsidianCalloutDetector {
   /**
    * Update a callout's collapse state in the Markdown
    * 
-   * Modifies the callout's opening line to add or remove the collapse indicator
-   * (+ or -) based on the desired state.
-   * 
    * @param {CalloutInfo} callout - The callout object to update
    * @param {boolean} newCollapsedState - The new collapse state
    * @returns {boolean} True if update was successful
@@ -209,13 +168,11 @@ class ObsidianCalloutDetector {
     const lines = this.editor.getValue().split('\n');
     const startLine = lines[callout.startLine];
     
-    // Update collapse state indicator
     const updatedLine = startLine.replace(
       this.CALLOUT_REGEX,
       (_, type, collapse, title) => `> [!${type}]${newCollapsedState ? '-' : '+'} ${title}`
     );
     
-    // Apply the change only if something actually changed
     if (updatedLine !== startLine) {
       this.editor.replaceRange(
         updatedLine,
@@ -231,19 +188,14 @@ class ObsidianCalloutDetector {
   /**
    * Find the callout that contains the given line
    * 
-   * Useful for determining which callout a cursor is inside of.
-   * Handles nested callouts correctly by checking the most specific match.
-   * 
    * @param {number} lineNumber - The line number to check
    * @returns {CalloutInfo|null} The callout containing this line or null
    */
   findCalloutContainingLine(lineNumber) {
     const allCallouts = this.detectAllCallouts();
     
-    // Check direct containment
     for (const callout of allCallouts) {
       if (lineNumber >= callout.startLine && lineNumber <= callout.endLine) {
-        // Check if it's a nested callout
         let nestedCallout = this.findNestedCalloutContainingLine(
           callout, 
           lineNumber
@@ -259,8 +211,6 @@ class ObsidianCalloutDetector {
   /**
    * Recursively find a nested callout containing the given line
    * 
-   * Helper method for findCalloutContainingLine that handles nesting.
-   * 
    * @param {CalloutInfo} parentCallout - The parent callout to check within
    * @param {number} lineNumber - The line number to find
    * @returns {CalloutInfo|null} The nested callout or null
@@ -268,7 +218,6 @@ class ObsidianCalloutDetector {
   findNestedCalloutContainingLine(parentCallout, lineNumber) {
     for (const nested of parentCallout.nestedCallouts) {
       if (lineNumber >= nested.startLine && lineNumber <= nested.endLine) {
-        // Check if there's an even deeper nesting
         const deeperNested = this.findNestedCalloutContainingLine(
           nested, 
           lineNumber
@@ -282,9 +231,6 @@ class ObsidianCalloutDetector {
   /**
    * Get all callouts within a section (between headings)
    * 
-   * A section is defined as the content between two headings or 
-   * the start/end of the document.
-   * 
    * @param {number} cursorLine - The line number to start searching from
    * @returns {Array<CalloutInfo>} Array of callouts in the current section
    */
@@ -293,7 +239,6 @@ class ObsidianCalloutDetector {
     
     const lines = this.editor.getValue().split('\n');
     
-    // Find section boundaries
     let sectionStart = cursorLine;
     while (sectionStart >= 0 && !lines[sectionStart].startsWith('#')) {
       sectionStart--;
@@ -304,11 +249,9 @@ class ObsidianCalloutDetector {
       sectionEnd++;
     }
     
-    // If no section was found, use the whole document
     if (sectionStart < 0) sectionStart = 0;
     if (sectionEnd >= lines.length) sectionEnd = lines.length - 1;
     
-    // Get all callouts and filter by section
     const allCallouts = this.detectAllCallouts();
     return allCallouts.filter(callout => 
       callout.startLine >= sectionStart && 
@@ -319,22 +262,16 @@ class ObsidianCalloutDetector {
   /**
    * Get the closest callout to the cursor position
    * 
-   * First checks if the cursor is inside a callout, then finds the
-   * nearest callout by line distance.
-   * 
    * @param {number} cursorLine - The current cursor line
    * @returns {CalloutInfo|null} The closest callout or null
    */
   getClosestCalloutToCursor(cursorLine) {
-    // First check if cursor is inside a callout
     const containingCallout = this.findCalloutContainingLine(cursorLine);
     if (containingCallout) return containingCallout;
     
-    // Otherwise find the closest callout declaration
     const allCallouts = this.detectAllCallouts();
     if (!allCallouts.length) return null;
     
-    // Sort by distance from cursor to callout start line
     return allCallouts.sort((a, b) => {
       const distA = Math.abs(a.startLine - cursorLine);
       const distB = Math.abs(b.startLine - cursorLine);
@@ -345,9 +282,6 @@ class ObsidianCalloutDetector {
   /**
    * Scan upward from cursor to find the closest callout
    * 
-   * Useful for implementing the toggleCurrentCallout functionality
-   * when the cursor is after a callout.
-   * 
    * @param {number} cursorLine - The current cursor line
    * @returns {CalloutInfo|null} The closest callout above or null
    */
@@ -357,10 +291,8 @@ class ObsidianCalloutDetector {
     const lines = this.editor.getValue().split('\n');
     let lineIndex = cursorLine;
     
-    // Scan upward to find the nearest callout start line
     while (lineIndex >= 0) {
       if (this.isCalloutStartLine(lines[lineIndex])) {
-        // Found a callout - process it
         return this.processCallout(lines, lineIndex);
       }
       lineIndex--;
@@ -371,52 +303,121 @@ class ObsidianCalloutDetector {
 }
 
 /**
- * CalloutMatcher
- * 
- * Bridges DOM elements with their Markdown representation for reliable 
- * syncing between visual changes and Markdown updates.
- * 
- * Maps between the live preview DOM elements and their corresponding
- * Markdown representation for bidirectional updates.
+ * DOMCalloutService for handling visual callouts in the preview mode
+ * This class is responsible for manipulating the DOM callout elements
  */
-class CalloutMatcher {
+class DOMCalloutService {
   /**
-   * Creates a new callout matcher
+   * Creates a new DOM callout service
    * 
-   * @param {Editor} editor - The Obsidian editor instance
    * @param {HTMLElement} root - The root DOM element containing callouts
    */
-  constructor(editor, root) {
-    this.editor = editor;
+  constructor(root) {
     this.root = root;
+  }
+
+  /**
+   * Get all callout DOM elements in the document
+   * 
+   * @returns {Array<HTMLElement>} Array of callout DOM elements
+   */
+  getAllCalloutElements() {
+    if (!this.root) return [];
+    return Array.from(this.root.querySelectorAll('.callout'));
+  }
+  
+  /**
+   * Get callout info from a DOM element
+   * 
+   * @param {HTMLElement} element - The callout DOM element
+   * @returns {Object} Basic info about the callout
+   */
+  getCalloutInfoFromElement(element) {
+    const titleEl = element.querySelector('.callout-title-inner');
+    const title = titleEl?.textContent?.trim() || '';
+    const type = element.getAttribute('data-callout') || '';
+    const isCollapsed = element.classList.contains('is-collapsed');
+    
+    return { title, type, isCollapsed };
+  }
+  
+  /**
+   * Apply collapse/expand state to a callout DOM element
+   * 
+   * @param {HTMLElement} callout - The callout DOM element
+   * @param {boolean} collapsed - Whether to collapse the callout
+   */
+  applyCalloutCollapseState(callout, collapsed) {
+    if (!callout) return;
+    
+    const content = callout.querySelector('.callout-content');
+    const foldIcon = callout.querySelector('.callout-fold');
+
+    const isCurrentlyCollapsed = callout.classList.contains('is-collapsed');
+    if (collapsed !== isCurrentlyCollapsed) {
+      callout.classList.toggle('is-collapsed', collapsed);
+      foldIcon?.classList.toggle('is-collapsed', collapsed);
+      content?.setAttribute('style', collapsed ? 'display: none;' : '');
+    }
+  }
+  
+  /**
+   * Find callout element by title
+   * 
+   * @param {string} title - The callout title to find
+   * @returns {HTMLElement|null} The found callout or null
+   */
+  findCalloutElementByTitle(title) {
+    if (!this.root) return null;
+    
+    const calloutElements = this.root.querySelectorAll('.callout');
+    for (const el of calloutElements) {
+      const titleEl = el.querySelector('.callout-title-inner');
+      const elTitle = titleEl?.textContent?.trim();
+      if (elTitle === title) {
+        return el;
+      }
+    }
+    
+    return null;
+  }
+}
+
+/**
+ * CalloutSyncService bridges the MarkdownService and DOMService
+ * This class is responsible for keeping the two representations in sync
+ */
+class CalloutSyncService {
+  /**
+   * Creates a new callout sync service
+   * 
+   * @param {CalloutMarkdownService} markdownService - The markdown service instance
+   * @param {DOMCalloutService} domService - The DOM service instance
+   */
+  constructor(markdownService, domService) {
+    this.markdownService = markdownService;
+    this.domService = domService;
     this.calloutMap = new Map(); // Maps from unique IDs to callout info
-    this.detector = new ObsidianCalloutDetector(editor);
     this.refreshCallouts();
   }
 
   /**
    * Refreshes the callout information map
-   * 
-   * Scans both the DOM and Markdown to build a mapping between them.
-   * Should be called whenever the document changes significantly.
    */
   refreshCallouts() {
-    if (!this.editor || !this.root) return;
+    if (!this.markdownService || !this.domService) return;
     
     // Get all callouts from the markdown
-    const markdownCallouts = this.detector.detectAllCallouts();
+    const markdownCallouts = this.markdownService.detectAllCallouts();
     
     // Get all callouts from the DOM
-    const domCallouts = this.root.querySelectorAll('.callout');
+    const domCallouts = this.domService.getAllCalloutElements();
     
     this.calloutMap.clear();
     
     // Match DOM callouts with markdown callouts
     domCallouts.forEach((domElement, index) => {
-      const titleEl = domElement.querySelector('.callout-title-inner');
-      const title = titleEl?.textContent?.trim() || '';
-      const type = domElement.getAttribute('data-callout') || '';
-      const isCollapsed = domElement.classList.contains('is-collapsed');
+      const { title, type, isCollapsed } = this.domService.getCalloutInfoFromElement(domElement);
       
       // Generate a unique ID for this callout
       const uniqueId = `callout-${index}`;
@@ -442,9 +443,6 @@ class CalloutMatcher {
   
   /**
    * Find the best matching markdown callout for a DOM callout
-   * 
-   * Uses multiple attributes for more reliable matching, with
-   * fallbacks for partial matches.
    * 
    * @param {Array<CalloutInfo>} markdownCallouts - Array of callouts from Markdown
    * @param {string} title - The title from the DOM callout
@@ -476,7 +474,6 @@ class CalloutMatcher {
     if (match) return match;
     
     // Fourth try: fuzzy title match as last resort
-    // This helps with titles that might have slight formatting differences
     return markdownCallouts.find(c => 
       title.includes(c.title) || 
       c.title.includes(title)
@@ -524,19 +521,29 @@ class CalloutMatcher {
   }
   
   /**
-   * Update the Markdown representation of a callout
+   * Update the state of a callout in both DOM and Markdown
    * 
    * @param {CalloutMapInfo} calloutInfo - The callout info object
    * @param {boolean} newCollapsedState - The new collapse state
    * @returns {boolean} True if update was successful
    */
-  updateMarkdownCollapseState(calloutInfo, newCollapsedState) {
-    if (!calloutInfo.markdownCallout || !this.editor) return false;
+  updateCalloutState(calloutInfo, newCollapsedState) {
+    let success = true;
     
-    return this.detector.updateCalloutCollapseState(
-      calloutInfo.markdownCallout, 
-      newCollapsedState
-    );
+    // Update the DOM
+    if (calloutInfo.domElement) {
+      this.domService.applyCalloutCollapseState(calloutInfo.domElement, newCollapsedState);
+    }
+    
+    // Update the Markdown
+    if (calloutInfo.markdownCallout) {
+      success = this.markdownService.updateCalloutCollapseState(
+        calloutInfo.markdownCallout, 
+        newCollapsedState
+      );
+    }
+    
+    return success;
   }
   
   /**
@@ -546,7 +553,7 @@ class CalloutMatcher {
    * @returns {CalloutMapInfo|undefined} The containing callout or undefined
    */
   findCalloutContainingLine(lineNumber) {
-    const markdownCallout = this.detector.findCalloutContainingLine(lineNumber);
+    const markdownCallout = this.markdownService.findCalloutContainingLine(lineNumber);
     if (!markdownCallout) return null;
     
     return Array.from(this.calloutMap.values())
@@ -563,7 +570,7 @@ class CalloutMatcher {
    * @returns {Array<CalloutMapInfo>} Callouts in the section
    */
   getCalloutsInCurrentSection(cursorLine) {
-    const sectionCallouts = this.detector.getCalloutsInCurrentSection(cursorLine);
+    const sectionCallouts = this.markdownService.getCalloutsInCurrentSection(cursorLine);
     
     return Array.from(this.calloutMap.values())
       .filter(info => 
@@ -581,7 +588,7 @@ class CalloutMatcher {
    * @returns {CalloutMapInfo|undefined} The closest callout or undefined
    */
   getClosestCalloutToCursor(cursorLine) {
-    const closestMarkdownCallout = this.detector.getClosestCalloutToCursor(cursorLine);
+    const closestMarkdownCallout = this.markdownService.getClosestCalloutToCursor(cursorLine);
     if (!closestMarkdownCallout) return null;
     
     return Array.from(this.calloutMap.values())
@@ -593,52 +600,38 @@ class CalloutMatcher {
 }
 
 /**
- * Apply collapse/expand state to a callout DOM element
- * 
- * Handles the visual toggle of a callout's expanded/collapsed state
- * in the Live Preview mode.
- * 
- * @param {HTMLElement} callout - The callout DOM element
- * @param {boolean} collapsed - Whether to collapse the callout
+ * EditorModeService detects and provides information about the current editor mode
  */
-function applyCalloutCollapseState(callout, collapsed) {
-  if (!callout) return;
-  
-  const content = callout.querySelector('.callout-content');
-  const foldIcon = callout.querySelector('.callout-fold');
-
-  const isCurrentlyCollapsed = callout.classList.contains('is-collapsed');
-  if (collapsed !== isCurrentlyCollapsed) {
-    callout.classList.toggle('is-collapsed', collapsed);
-    foldIcon?.classList.toggle('is-collapsed', collapsed);
-    content?.setAttribute('style', collapsed ? 'display: none;' : '');
+class EditorModeService {
+  /**
+   * Creates a new editor mode service
+   * 
+   * @param {App} app - The Obsidian application instance
+   */
+  constructor(app) {
+    this.app = app;
   }
-}
 
-/**
- * Detect if the editor is in Markdown source mode rather than Live Preview
- * 
- * @param {App} app - The Obsidian application instance
- * @returns {boolean} True if in Markdown mode
- */
-function isInMarkdownMode(app) {
-  // Get the current view mode
-  const view = app.workspace.activeLeaf?.view;
-  if (!view) return false;
-  
-  // Check if the view has a sourceMode property that's true
-  // This is a reliable way to detect Markdown mode vs Live Preview
-  return view.getMode() === 'source';
+  /**
+   * Detect if the editor is in Markdown source mode rather than Live Preview
+   * 
+   * @returns {boolean} True if in Markdown mode
+   */
+  isInMarkdownMode() {
+    // Get the current view mode
+    const view = this.app.workspace.activeLeaf?.view;
+    if (!view) return false;
+    
+    // Check if the view has a sourceMode property that's true
+    return view.getMode() === 'source';
+  }
 }
 
 /**
  * CalloutControlPlugin
  * 
- * An Obsidian plugin to toggle, collapse, or expand callouts in both
- * Live Preview and Markdown source modes.
- * 
- * Provides commands to manage callouts individually or in groups, with
- * optional syncing to Markdown (+/-) indicators.
+ * The main plugin class that coordinates the services and provides
+ * commands to the Obsidian interface.
  */
 module.exports = class CalloutControlPlugin extends Plugin {
   /**
@@ -686,71 +679,65 @@ module.exports = class CalloutControlPlugin extends Plugin {
   }
 
   /**
-   * Get the editor and detector for the current view
+   * Get the service instances for the current editor context
    * 
-   * Centralized helper to create editor and detector instances.
-   * 
-   * @returns {Object|null} Object containing editor and detector, or null
+   * @returns {Object|null} Object containing the service instances, or null
    */
-  getEditorAndDetector() {
-    const editor = this.app.workspace.activeEditor?.editor;
-    if (!editor) return null;
-    
-    return { 
-      editor, 
-      detector: new ObsidianCalloutDetector(editor) 
-    };
-  }
-  
-  /**
-   * Create a fresh callout matcher for the current editor
-   * 
-   * The matcher bridges between DOM elements and Markdown representation.
-   * 
-   * @returns {CalloutMatcher|null} A new callout matcher or null
-   */
-  getCalloutMatcher() {
+  getServices() {
     const editor = this.app.workspace.activeEditor?.editor;
     const root = this.app.workspace.activeEditor?.containerEl;
     if (!editor || !root) return null;
     
-    return new CalloutMatcher(editor, root);
+    const modeService = new EditorModeService(this.app);
+    const markdownService = new CalloutMarkdownService(editor);
+    const domService = new DOMCalloutService(root);
+    const syncService = new CalloutSyncService(markdownService, domService);
+    
+    return {
+      editor,
+      modeService,
+      markdownService,
+      domService,
+      syncService
+    };
   }
   
   /**
    * Apply a collapse/expand operation to callouts, with optional Markdown syncing
-   * 
-   * This is the centralized handler for all callout operations. It determines
-   * which callouts to modify based on scope, applies the appropriate state change
-   * based on mode, and optionally updates the Markdown.
    * 
    * @param {string} scope - 'all', 'current', or 'section' 
    * @param {string} mode - 'toggle', 'collapse', 'expand', or 'toggle-individual'
    * @param {boolean} modifyMarkdown - Whether to update the Markdown
    */
   applyCalloutOperation(scope, mode, modifyMarkdown = false) {
-    // Get editor and create detector
-    const editorData = this.getEditorAndDetector();
-    if (!editorData) return;
+    // Get services
+    const services = this.getServices();
+    if (!services) return;
     
-    const { editor, detector } = editorData;
+    const { 
+      editor, 
+      modeService, 
+      markdownService, 
+      syncService 
+    } = services;
+    
     const cursor = editor.getCursor();
     
-    // Check if we're in markdown mode with markdown modification
-    const inMarkdownMode = isInMarkdownMode(this.app);
+    // Check if we're in markdown mode
+    const inMarkdownMode = modeService.isInMarkdownMode();
     
     // If in markdown mode and we're modifying markdown, use direct markdown methods
     if (inMarkdownMode && modifyMarkdown) {
       // Get the relevant callouts based on scope
       let callouts = [];
       if (scope === 'all') {
-        callouts = detector.detectAllCallouts();
+        callouts = markdownService.detectAllCallouts();
       } else if (scope === 'current') {
-        const callout = detector.findCalloutContainingLine(cursor.line) || 
-                        detector.findCalloutAboveCursor(cursor.line);
+        const callout = markdownService.findCalloutContainingLine(cursor.line) || 
+                       markdownService.findCalloutAboveCursor(cursor.line);
         if (callout) callouts = [callout];
       } else if (scope === 'section') {
-        callouts = detector.getCalloutsInCurrentSection(cursor.line);
+        callouts = markdownService.getCalloutsInCurrentSection(cursor.line);
       }
       
       if (!callouts.length) return;
@@ -775,7 +762,7 @@ module.exports = class CalloutControlPlugin extends Plugin {
       
       // Update each callout
       sortedCallouts.forEach(callout => {
-        detector.updateCalloutCollapseState(callout, getNewState(callout));
+        markdownService.updateCalloutCollapseState(callout, getNewState(callout));
       });
       
       return;
@@ -783,13 +770,9 @@ module.exports = class CalloutControlPlugin extends Plugin {
     
     // For Live Preview mode or visual-only operations
     
-    // Get the callout matcher for DOM operations
-    const matcher = this.getCalloutMatcher();
-    if (!matcher) return;
-    
     // Handle the different scopes
     if (scope === 'all') {
-      const callouts = matcher.getAllCallouts();
+      const callouts = syncService.getAllCallouts();
       if (!callouts.length) return;
       
       try {
@@ -811,12 +794,11 @@ module.exports = class CalloutControlPlugin extends Plugin {
         callouts.forEach(calloutInfo => {
           const newState = getNewState(calloutInfo);
           
-          // Update DOM
-          applyCalloutCollapseState(calloutInfo.domElement, newState);
-          
-          // Update Markdown if requested
+          // Update DOM and Markdown
           if (modifyMarkdown) {
-            matcher.updateMarkdownCollapseState(calloutInfo, newState);
+            syncService.updateCalloutState(calloutInfo, newState);
+          } else {
+            services.domService.applyCalloutCollapseState(calloutInfo.domElement, newState);
           }
         });
       } catch (err) {
@@ -824,33 +806,26 @@ module.exports = class CalloutControlPlugin extends Plugin {
       }
     } else if (scope === 'current') {
       // Find the callout containing or near the cursor
-      const markdownCallout = detector.findCalloutContainingLine(cursor.line) || 
-                              detector.findCalloutAboveCursor(cursor.line);
+      const markdownCallout = markdownService.findCalloutContainingLine(cursor.line) || 
+                            markdownService.findCalloutAboveCursor(cursor.line);
       
       if (!markdownCallout) return;
       
       // Find the matching DOM element
-      let calloutInfo = matcher.getCalloutAtLine(markdownCallout.startLine);
+      let calloutInfo = syncService.getCalloutAtLine(markdownCallout.startLine);
       
       // If no match through the matcher, try direct DOM lookup
       if (!calloutInfo) {
-        const root = this.app.workspace.activeEditor?.containerEl;
-        if (!root) return;
+        const domElement = services.domService.findCalloutElementByTitle(markdownCallout.title);
         
-        const calloutElements = root.querySelectorAll('.callout');
-        for (const el of calloutElements) {
-          const titleEl = el.querySelector('.callout-title-inner');
-          const title = titleEl?.textContent?.trim();
-          if (title === markdownCallout.title) {
-            calloutInfo = {
-              domElement: el,
-              markdownCallout: markdownCallout
-            };
-            break;
-          }
+        if (domElement) {
+          calloutInfo = {
+            domElement,
+            markdownCallout
+          };
+        } else {
+          return;
         }
-        
-        if (!calloutInfo) return;
       }
       
       // Determine new state based on mode
@@ -864,38 +839,28 @@ module.exports = class CalloutControlPlugin extends Plugin {
       }
       
       // Apply the change
-      applyCalloutCollapseState(calloutInfo.domElement, newState);
-      
       if (modifyMarkdown) {
-        detector.updateCalloutCollapseState(markdownCallout, newState);
+        syncService.updateCalloutState(calloutInfo, newState);
+      } else {
+        services.domService.applyCalloutCollapseState(calloutInfo.domElement, newState);
       }
     } else if (scope === 'section') {
       // Get all callouts in the current section
-      const sectionCallouts = detector.getCalloutsInCurrentSection(cursor.line);
+      const sectionCallouts = markdownService.getCalloutsInCurrentSection(cursor.line);
       if (!sectionCallouts.length) return;
       
       try {
-        const root = this.app.workspace.activeEditor?.containerEl;
-        
         // Process each callout in the section
         sectionCallouts.forEach(markdownCallout => {
           // Find the callout in the DOM
-          let calloutInfo = matcher.getCalloutAtLine(markdownCallout.startLine);
-          let currentState = false; // Default if DOM element not found
+          let calloutInfo = syncService.getCalloutAtLine(markdownCallout.startLine);
           
-          if (calloutInfo && calloutInfo.domElement) {
-            currentState = calloutInfo.domElement.classList.contains('is-collapsed');
-          } else if (root) {
+          if (!calloutInfo) {
             // Try direct DOM lookup
-            const calloutElements = root.querySelectorAll('.callout');
-            for (const el of calloutElements) {
-              const titleEl = el.querySelector('.callout-title-inner');
-              const title = titleEl?.textContent?.trim();
-              if (title === markdownCallout.title) {
-                currentState = el.classList.contains('is-collapsed');
-                calloutInfo = { domElement: el, markdownCallout };
-                break;
-              }
+            const domElement = services.domService.findCalloutElementByTitle(markdownCallout.title);
+            
+            if (domElement) {
+              calloutInfo = { domElement, markdownCallout };
             }
           }
           
@@ -906,17 +871,20 @@ module.exports = class CalloutControlPlugin extends Plugin {
           } else if (mode === 'expand') {
             newState = false;
           } else { // toggle
+            const currentState = calloutInfo ? 
+              calloutInfo.domElement.classList.contains('is-collapsed') : 
+              markdownCallout.isCollapsed;
             newState = !currentState;
           }
           
           // Update Markdown
           if (modifyMarkdown) {
-            detector.updateCalloutCollapseState(markdownCallout, newState);
+            markdownService.updateCalloutCollapseState(markdownCallout, newState);
           }
           
           // Update DOM if element found
           if (calloutInfo && calloutInfo.domElement) {
-            applyCalloutCollapseState(calloutInfo.domElement, newState);
+            services.domService.applyCalloutCollapseState(calloutInfo.domElement, newState);
           }
         });
       } catch (err) {
@@ -928,9 +896,6 @@ module.exports = class CalloutControlPlugin extends Plugin {
   /**
    * Process all callouts in the document
    * 
-   * Applies a uniform operation to all callouts in the document.
-   * In 'toggle' mode, all callouts will be toggled to the same state.
-   * 
    * @param {string} mode - 'toggle', 'collapse', or 'expand'
    * @param {boolean} modifyMarkdown - Whether to update the Markdown
    */
@@ -941,9 +906,6 @@ module.exports = class CalloutControlPlugin extends Plugin {
   /**
    * Toggle each callout individually
    * 
-   * Unlike processCallouts with 'toggle', this toggles each callout
-   * to its opposite state independently.
-   * 
    * @param {boolean} modifyMarkdown - Whether to update the Markdown (default: true)
    */
   toggleWithMarkdown() {
@@ -952,8 +914,6 @@ module.exports = class CalloutControlPlugin extends Plugin {
   
   /**
    * Toggle/collapse/expand the current callout
-   * 
-   * Operates on the callout under the cursor or the closest one above.
    * 
    * @param {string} mode - 'toggle', 'collapse', or 'expand'
    * @param {boolean} modifyMarkdown - Whether to update the Markdown
@@ -964,8 +924,6 @@ module.exports = class CalloutControlPlugin extends Plugin {
   
   /**
    * Toggle/collapse/expand all callouts in the current section
-   * 
-   * A section is defined as the content between two heading lines.
    * 
    * @param {string} mode - 'toggle', 'collapse', or 'expand'
    * @param {boolean} modifyMarkdown - Whether to update the Markdown
