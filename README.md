@@ -1,38 +1,68 @@
-# 🔽 Callout Control — Obsidian Plugin
+# Callout Control for Obsidian
 
 ![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Obsidian v1.5+](https://img.shields.io/badge/obsidian-1.5%2B-blueviolet)
 
-**Callout Control** is a lightweight plugin for [Obsidian](https://obsidian.md) that lets you quickly **toggle, collapse, or expand** callouts directly in **Live Preview** — all using keyboard commands.
+> Control callouts with keyboard shortcuts in Obsidian's Live Preview mode
 
-Control can be applied:
-- 🎯 **Uniformly** — All callouts follow the same state (e.g., expand all)
-- 🎛️ **Individually** — Each callout is toggled based on its own current state
+**Callout Control** lets you quickly toggle, collapse, or expand Obsidian callouts using keyboard commands—making your notes cleaner and your workflow faster.
 
----
+## Table of Contents
+
+- [Features](#-features)
+- [Installation](#-installation)
+- [Usage](#-usage)
+- [Commands](#-commands)
+- [Toggle Behavior](#-toggle-behavior)
+- [Examples](#-examples)
+- [Configuration](#-configuration)
+- [Troubleshooting](#-troubleshooting)
+- [Compatibility](#-compatibility)
+- [Support](#-support)
+- [License](#-license)
 
 ## ✨ Features
 
-> ✅ Visual toggling works in **Live Preview** mode only.  
-> ✏️ Markdown-updating commands work in **any editing mode**, including Source Mode.
-
-- Toggle, collapse, or expand:
-  - All visible callouts
+- **Toggle, collapse, or expand callouts** with keyboard shortcuts:
+  - All visible callouts at once
   - Only the callout under your cursor
   - All callouts in the current section
-- Use different commands to apply:
-  - 🎯 **Uniform behavior** — All callouts follow the same state
-  - 🎛️ **Individual behavior** — Each callout toggles independently based on its current state
-- Optional: sync visual state to Markdown by updating `+` / `-` after the callout tag
-- Purely visual (DOM-based), unless you choose to update the Markdown
 
-> ⚠️ **Visual commands** only affect callouts currently rendered on screen.  
-> Off-screen callouts must be scrolled into view due to Obsidian’s virtual scrolling.  
-> ✏️ **Markdown commands** update the entire file and work regardless of scroll position.
+- **Command behaviors:**
+  - **Uniform behavior:** Commands that apply the same state to all affected callouts
+  - **Individual behavior:** Commands that toggle each callout based on its current state
+  
+- **Visual or Markdown updates:**
+  - Visual-only changes (appearance only)
+  - Markdown updates (sync visual state by updating `+`/`-` markers)
 
----
+> **Note:** Visual commands affect only callouts currently rendered on screen due to Obsidian's virtual scrolling. Markdown commands work regardless of scroll position.
 
-## 🧮 Command Overview
+## 🔌 Installation
+
+### Manual Installation
+
+1. Download the [latest release](https://github.com/MikeDSmith/obsidian-callout-control/releases) or download directly: [v1.0.1](https://github.com/MikeDSmith/obsidian-callout-control/releases/download/v1.0.1/obsidian-callout-control-v1.0.1.zip)
+2. Create a folder in your vault's plugin directory: `.obsidian/plugins/obsidian-callout-control/`
+3. Extract `main.js` and `manifest.json` into that folder
+4. In Obsidian, go to **Settings → Community Plugins**, click **Reload plugins** and enable **Callout Control**
+
+> **Note:** This plugin is not yet available in the Obsidian Community Plugins browser. Once approved, you'll be able to install it directly from within Obsidian.
+
+## 🚀 Usage
+
+After installation, you can:
+
+1. Use the Command Palette (`Ctrl/Cmd+P`) and search for "Callout Control" commands
+2. Set up keyboard shortcuts in **Settings → Hotkeys → Callout Control**
+
+### Recommended Hotkeys
+
+- **Collapse:** `Shift` + `Cmd` + `<`
+- **Expand:** `Shift` + `Cmd` + `>`
+- **Toggle:** `Shift` + `Cmd` + `/`
+
+## 🧮 Commands
 
 | Scope   | Action   | Visual Only                      | With Markdown                              |
 |---------|----------|----------------------------------|---------------------------------------------|
@@ -46,106 +76,62 @@ Control can be applied:
 | Section | Collapse | Collapse Section Callouts        | Collapse Section Callouts (with Markdown)   |
 | Section | Expand   | Expand Section Callouts          | Expand Section Callouts (with Markdown)     |
 
----
-
 ## 🔄 Toggle Behavior
 
-| Mode              | Description                                                                |
-|-------------------|----------------------------------------------------------------------------|
-| 🎯 **Uniform**     | All affected callouts are set to the same state (e.g., all collapsed)      |
-| 🎛️ **Individual** | Each callout toggles based on its current state (expanded ↔ collapsed)     |
+| Behavior Type | Description                                                   |
+|---------------|---------------------------------------------------------------|
+| **Uniform**   | All affected callouts are set to the same state (used by most commands) |
+| **Individual** | Each callout toggles based on its current state (`+` or `-`) (used only by "Toggle All Callouts (Individually)" command) |
 
-> 🔍 **Note on Toggle All (with Markdown):**  
-> Unlike the visual toggle (which applies a uniform state), the markdown version toggles each callout based on its own current state (`+` or `-`).  
-> This allows for fine-grained toggling but can result in a mix of expanded and collapsed callouts.  
-> This is the current behavior and may be refined in future updates based on user feedback.
+> **Note on Toggle All (with Markdown):** Unlike the visual toggle (which applies a uniform state), the markdown version toggles each callout based on its own current state. This allows for more nuanced control but can result in a mix of expanded and collapsed callouts.
 
-Uniform behavior is ideal for quickly resetting or focusing; individual is ideal for browsing and interaction.
+## 📊 Examples
 
----
+### Toggle All Callouts (Uniform)
+![Toggle All Callouts Uniform](https://github.com/MikeDSmith/obsidian-callout-control/raw/main/demo/toggle-all-uniform.gif)
 
-## 🎞️ Demo GIFs
+### Toggle All Callouts (Individual)
+![Toggle All Callouts Individual](https://github.com/MikeDSmith/obsidian-callout-control/raw/main/demo/toggle-all-individual.gif)
 
-Here’s how the plugin works in action:
+### Toggle Current Callout
+![Toggle Current Callout](https://github.com/MikeDSmith/obsidian-callout-control/raw/main/demo/toggle-current.gif)
 
-### 🔁 Toggle All Callouts (Uniform)
-![Toggle All Callouts (Uniform)](./demo/toggle-all-uniform.gif)  
-Toggles all visible callouts to the same state (expanded or collapsed).
+### Toggle Section Callouts
+![Toggle Section Callouts](https://github.com/MikeDSmith/obsidian-callout-control/raw/main/demo/toggle-section.gif)
 
-### 🔁 Toggle All Callouts (Individual)
-![Toggle All Callouts (Individual)](./demo/toggle-all-individual.gif)  
-Each callout toggles independently based on its own `+` or `-` markdown state.
+## ⚙️ Configuration
 
-### 👆 Toggle Current Callout
-![Toggle Current Callout](./demo/toggle-current.gif)  
-Toggles only the callout your cursor is currently inside or below.
+Currently, Callout Control has no configuration settings. All functionality is accessible through commands.
 
-### 📚 Toggle Section Callouts
-![Toggle Section Callouts](./demo/toggle-section.gif)  
-Toggles all callouts under the current heading or section.
+## ❓ Troubleshooting
 
----
+### Common Issues
 
-## 🎹 Example Hotkeys
+1. **Commands not working in Source mode**
+   - Visual toggling works only in Live Preview mode
+   - Markdown-updating commands work in any editing mode
 
-These are the hotkeys used by the author:
+2. **Not all callouts are toggled**
+   - Due to Obsidian's virtual scrolling, off-screen callouts must be scrolled into view
+   - Use Markdown-updating commands to affect all callouts regardless of scroll position
 
-- 🔽 Collapse: `Shift` + `Cmd` + `<`
-- 🔼 Expand: `Shift` + `Cmd` + `>`
-- 🔁 Toggle: `Shift` + `Cmd` + `/`
-
-You can customize hotkeys under  
-**Settings → Community Plugins → Hotkeys → Callout Control**
-
----
-
-## 🧩 Installation
-
-### Manual
-
-1. Download or clone this repository.
-2. Create a folder in your vault's plugin directory:
-   ```
-   .obsidian/plugins/obsidian-callout-control/
-   ```
-3. Copy only the following files into that folder:
-   ```
-   main.js
-   manifest.json
-   ```
-4. In Obsidian:
-   - Go to **Settings → Community Plugins**
-   - Click **"Reload plugins"** or restart Obsidian
-   - Find **Callout Control** in the list and enable it
-
----
+3. **Plugin conflicts**
+   - If you experience issues, try disabling other callout-related plugins temporarily
 
 ## ✅ Compatibility
 
 - Requires Obsidian **v1.5+**
-- Supports **Live Preview** mode only
+- Visual toggle functionality works in **Live Preview** mode only
+- Markdown-updating functionality works in all editing modes
 
----
+## 🙋 Support
 
-## 📘 Learn More
-
-To learn more about installing and managing Obsidian community plugins, see the official docs:  
-[Obsidian Community Plugins Guide](https://help.obsidian.md/Plugins/Community+plugins)
-
----
-
-## 🙌 Author
-
-Created by **Mike D. Smith**
-
----
-
-## 🤝 Acknowledgements
-
-- Built with the assistance of **ChatGPT** for brainstorming, implementation, and documentation refinement.
-
----
+- Submit issues on [GitHub](https://github.com/MikeDSmith/obsidian-callout-control/issues)
 
 ## 📝 License
 
 [MIT License](LICENSE)
+
+---
+
+Developed by **Mike D. Smith** with assistance from ChatGPT and Claude for brainstorming, implementation, and documentation.
