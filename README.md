@@ -2,12 +2,20 @@
 
 ![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Obsidian v1.5+](https://img.shields.io/badge/obsidian-1.5%2B-blueviolet)
+![Release v1.0.1](https://img.shields.io/badge/release-v1.0.1-green)
 
 > Control callouts with keyboard shortcuts in Obsidian's Live Preview mode
 
 **Callout Control** lets you quickly toggle, collapse, or expand Obsidian callouts using keyboard commands—making your notes cleaner and your workflow faster.
 
-## Table of Contents
+## 🚀 Quick Start
+
+1. Install the plugin and enable it in Community Plugins
+2. Open a note with callouts in Live Preview mode
+3. Use the Command Palette (`Ctrl/Cmd+P`) and search for "Callout Control"
+4. Try the "Toggle Current Callout" command when your cursor is near a callout
+
+## 📋 Table of Contents
 
 - [Features](#-features)
 - [Installation](#-installation)
@@ -16,6 +24,7 @@
 - [Toggle Behavior](#-toggle-behavior)
 - [Examples](#-examples)
 - [Configuration](#-configuration)
+- [FAQ](#-faq)
 - [Troubleshooting](#-troubleshooting)
 - [Compatibility](#-compatibility)
 - [Support](#-support)
@@ -40,7 +49,9 @@
 
 ## 🔌 Installation
 
-### Manual Installation
+The plugin is currently in development and not yet available in the Obsidian Community Plugins browser.
+
+### From GitHub
 
 1. Download the [latest release](https://github.com/MikeDSmith/obsidian-callout-control/releases) or download directly: [v1.0.1](https://github.com/MikeDSmith/obsidian-callout-control/releases/download/v1.0.1/obsidian-callout-control-v1.0.1.zip)
 2. Create a folder in your vault's plugin directory: `.obsidian/plugins/obsidian-callout-control/`
@@ -58,9 +69,20 @@ After installation, you can:
 
 ### Recommended Hotkeys
 
+Consider setting up these keyboard shortcuts for efficient workflow:
 - **Collapse:** `Shift` + `Cmd` + `<`
 - **Expand:** `Shift` + `Cmd` + `>`
 - **Toggle:** `Shift` + `Cmd` + `/`
+
+### Using With Custom Callouts
+
+This plugin works with both standard Obsidian callouts and any custom callouts you've added to your vault. As long as the callout follows Obsidian's syntax `> [!type]± Title`, it will be controllable.
+
+### Performance Tips
+
+- For best performance, use Markdown-updating commands when working with large documents
+- When working with many callouts, section-based commands can be more efficient than toggling all callouts
+- Consider collapsing callouts in sections you're not actively working on to improve editor performance
 
 ## 🧮 Commands
 
@@ -102,6 +124,20 @@ After installation, you can:
 ## ⚙️ Configuration
 
 Currently, Callout Control has no configuration settings. All functionality is accessible through commands.
+
+## ❓ FAQ
+
+### How does "Section" mode work?
+The section mode affects all callouts between the current heading and the next heading of the same or higher level. If there are no headings in your document, it affects all callouts.
+
+### Do I need to restart Obsidian after installation?
+No, just enable the plugin in the Community Plugins settings.
+
+### Will this plugin work with other callout-related plugins?
+Yes, in most cases. Callout Control operates on the standard callout formatting in Obsidian.
+
+### Does this plugin support nested callouts?
+The plugin works with nested callouts by operating on the parent callout only. When you toggle, collapse, or expand a callout that contains nested callouts inside it, the command applies to the entire parent callout structure in both visual and markdown modes.
 
 ## ❓ Troubleshooting
 
