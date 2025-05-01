@@ -96,6 +96,8 @@ module.exports = class CalloutControlPlugin extends Plugin {
           const titleEl = callout.querySelector('.callout-title-inner');
           const title = titleEl?.textContent?.trim();
           if (title) {
+            // Find the corresponding markdown line by searching for the title text.
+            // Note: This might be unreliable if titles are not unique or contain special characters.
             for (let i = 0; i < lines.length; i++) {
               if (lines[i].includes(title)) {
                 const updatedLine = lines[i].replace(/\[!([\w-]+)\]([+-])/, (_, type, symbol) =>
@@ -136,6 +138,8 @@ module.exports = class CalloutControlPlugin extends Plugin {
         if (!title) return;
 
         const lines = editor.getValue().split('\n');
+        // Find the corresponding markdown line by searching for the title text.
+        // Note: This might be unreliable if titles are not unique or contain special characters.
         for (let i = 0; i < lines.length; i++) {
           if (lines[i].includes(title)) {
             const updatedLine = lines[i].replace(/\[!([\w-]+)\]([+-])/, (_, type, symbol) =>
@@ -191,6 +195,8 @@ module.exports = class CalloutControlPlugin extends Plugin {
         }
 
         // Also update DOM if visible
+        // Find the corresponding DOM element by searching for the title text in the line.
+        // Note: This might be unreliable if titles are not unique or contain special characters.
         const titleMatch = [...calloutTitleMap.keys()].find(title => line.includes(title));
         if (titleMatch) {
           const callout = calloutTitleMap.get(titleMatch);
@@ -247,6 +253,8 @@ module.exports = class CalloutControlPlugin extends Plugin {
         }
 
         // Also update DOM if visible
+        // Find the corresponding DOM element by searching for the title text in the line.
+        // Note: This might be unreliable if titles are not unique or contain special characters.
         const matchedTitle = [...calloutTitleMap.keys()].find(title => lines[i].includes(title));
         if (matchedTitle) {
           const callout = calloutTitleMap.get(matchedTitle);
