@@ -88,19 +88,10 @@ module.exports = class CalloutControlPlugin extends Plugin {
 
     try {
       // Apply the visual state change to each rendered callout
-      callouts.forEach((callout) => {
-        const content = callout.querySelector('.callout-content');
-        const foldIcon = callout.querySelector('.callout-fold');
+      callouts.forEach(callout => {
+        // Apply the determined uniform state visually
+        applyCalloutCollapseState(callout, shouldCollapse);
 
-        if (shouldCollapse) {
-          callout.classList.add('is-collapsed');
-          foldIcon?.classList.add('is-collapsed');
-          if (content) content.setAttribute('style', 'display: none;');
-        } else {
-          callout.classList.remove('is-collapsed');
-          foldIcon?.classList.remove('is-collapsed');
-          if (content) content.setAttribute('style', '');
-        }
         if (modifyMarkdown && editor && lines.length) {
           const titleEl = callout.querySelector('.callout-title-inner');
           const title = titleEl?.textContent?.trim();
@@ -108,6 +99,7 @@ module.exports = class CalloutControlPlugin extends Plugin {
             for (let i = 0; i < lines.length; i++) {
               if (lines[i].includes(title)) {
                 const updatedLine = lines[i].replace(/\[!([\w-]+)\]([+-])/, (_, type, symbol) =>
+                  // Update Markdown symbol based on the uniform state
                   `[!${type}]${shouldCollapse ? '-' : '+'}`
                 );
                 editor.replaceRange(updatedLine, { line: i, ch: 0 }, { line: i, ch: lines[i].length });
