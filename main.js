@@ -48,9 +48,9 @@ module.exports = class CalloutControlPlugin extends Plugin {
     this.registerCommand('expand-all-with-markdown', 'Expand All Callouts (with Markdown)', () => this.processCallouts('expand', true));
 
     // Current Callout (Visual Only)
-    this.registerCommand('toggle-current', 'Toggle Current Callout', () => this.toggleCurrentCallout());
-    this.registerCommand('collapse-current', 'Collapse Current Callout', () => this.toggleCurrentCallout('collapse'));
-    this.registerCommand('expand-current', 'Expand Current Callout', () => this.toggleCurrentCallout('expand'));
+    this.registerCommand('toggle-current', 'Toggle Current Callout (Visual Only)', () => this.toggleCurrentCallout());
+    this.registerCommand('collapse-current', 'Collapse Current Callout (Visual Only)', () => this.toggleCurrentCallout('collapse'));
+    this.registerCommand('expand-current', 'Expand Current Callout (Visual Only)', () => this.toggleCurrentCallout('expand'));
 
     // Current Callout (with Markdown)
     this.registerCommand('toggle-current-with-markdown', 'Toggle Current Callout (with Markdown)', () => this.toggleCurrentCallout('toggle', true));

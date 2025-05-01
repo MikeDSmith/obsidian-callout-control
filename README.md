@@ -64,6 +64,28 @@ Uniform behavior is ideal for quickly resetting or focusing; individual is ideal
 
 ---
 
+## 🎞️ Demo GIFs
+
+Here’s how the plugin works in action:
+
+### 🔁 Toggle All Callouts (Uniform)
+![Toggle All Callouts (Uniform)](./demo/toggle-all-uniform.gif)  
+Toggles all visible callouts to the same state (expanded or collapsed).
+
+### 🔁 Toggle All Callouts (Individual)
+![Toggle All Callouts (Individual)](./demo/toggle-all-individual.gif)  
+Each callout toggles independently based on its own `+` or `-` markdown state.
+
+### 👆 Toggle Current Callout
+![Toggle Current Callout](./demo/toggle-current.gif)  
+Toggles only the callout your cursor is currently inside or below.
+
+### 📚 Toggle Section Callouts
+![Toggle Section Callouts](./demo/toggle-section.gif)  
+Toggles all callouts under the current heading or section.
+
+---
+
 ## 🎹 Example Hotkeys
 
 These are the hotkeys used by the author:
