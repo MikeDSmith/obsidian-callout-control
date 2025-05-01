@@ -706,14 +706,35 @@ module.exports = class CalloutControlPlugin extends Plugin {
       const root = this.app.workspace.activeEditor?.containerEl;
       
       sectionCallouts.forEach(markdownCallout => {
+        // Find the callout in the DOM first to determine its current visual state
+        let calloutInfo = matcher?.getCalloutAtLine(markdownCallout.startLine);
+        let currentVisualState = false; // Default if DOM element not found
+        
+        if (calloutInfo && calloutInfo.domElement) {
+          currentVisualState = calloutInfo.domElement.classList.contains('is-collapsed');
+        } else if (root) {
+          // Fallback: try to find it directly in DOM by title
+          const calloutElements = root.querySelectorAll('.callout');
+          for (const el of calloutElements) {
+            const titleEl = el.querySelector('.callout-title-inner');
+            const title = titleEl?.textContent?.trim();
+            if (title === markdownCallout.title) {
+              currentVisualState = el.classList.contains('is-collapsed');
+              break;
+            }
+          }
+        }
+        
         // Determine the action based on mode
         let newCollapsedState;
         if (mode === 'collapse') {
           newCollapsedState = true;
         } else if (mode === 'expand') {
           newCollapsedState = false;
-        } else { // toggle - use the opposite of the current state
-          newCollapsedState = !markdownCallout.isCollapsed;
+        } else { // toggle mode
+          // For visual-only mode, use the current DOM state
+          // For markdown mode, use the markdown state
+          newCollapsedState = modifyMarkdown ? !markdownCallout.isCollapsed : !currentVisualState;
         }
         
         // Update Markdown representation
@@ -724,8 +745,6 @@ module.exports = class CalloutControlPlugin extends Plugin {
         // Find and update the DOM element
         if (root) {
           // Try to find it through the matcher first
-          let calloutInfo = matcher?.getCalloutAtLine(markdownCallout.startLine);
-          
           if (calloutInfo) {
             applyCalloutCollapseState(calloutInfo.domElement, newCollapsedState);
           } else {
