@@ -1,0 +1,31 @@
+{
+  "commands": {
+    "toggle-all": true,
+    "collapse-all": true,
+    "expand-all": true,
+    "flip-all": true,
+    "toggle-all-with-markdown": true,
+    "collapse-all-with-markdown": true,
+    "expand-all-with-markdown": true,
+    "flip-all-with-markdown": true,
+    "toggle-current": true,
+    "collapse-current": true,
+    "expand-current": true,
+    "toggle-current-with-markdown": true,
+    "collapse-current-with-markdown": true,
+    "expand-current-with-markdown": true,
+    "toggle-section-visual": true,
+    "collapse-section-visual": true,
+    "expand-section-visual": true,
+    "flip-section-visual": true,
+    "toggle-section-with-markdown": true,
+    "collapse-section-with-markdown": true,
+    "expand-section-with-markdown": true,
+    "flip-section-with-markdown": true
+  },
+  "groupsEnabled": {
+    "all": true,
+    "current": true,
+    "section": true
+  }
+}
