@@ -449,9 +449,13 @@ module.exports = class CalloutControlPlugin extends Plugin {
     this.registerCommand('expand-all', 'Expand All Callouts (Visual Only)', () => this.processCallouts('expand'));
 
     // All Callouts (with Markdown) - Works in both Live Preview and Markdown modes
-    this.registerCommand('toggle-all-with-markdown', 'Toggle All Callouts Individually (with Markdown)', () => this.toggleWithMarkdown());
+    this.registerCommand('toggle-all-with-markdown', 'Toggle All Callouts Uniformly (with Markdown)', () => this.processCallouts('toggle', true));
     this.registerCommand('collapse-all-with-markdown', 'Collapse All Callouts (with Markdown)', () => this.processCallouts('collapse', true));
     this.registerCommand('expand-all-with-markdown', 'Expand All Callouts (with Markdown)', () => this.processCallouts('expand', true));
+
+    // New "Flip" commands for toggling callouts individually
+    this.registerCommand('flip-all', 'Flip All Callouts Individually (Visual Only)', () => this.processCallouts('toggle-individual'));
+    this.registerCommand('flip-all-with-markdown', 'Flip All Callouts Individually (with Markdown)', () => this.processCallouts('toggle-individual', true));
 
     // Current Callout (Visual Only)
     this.registerCommand('toggle-current', 'Toggle Current Callout (Visual Only)', () => this.toggleCurrentCallout());
@@ -464,14 +468,18 @@ module.exports = class CalloutControlPlugin extends Plugin {
     this.registerCommand('expand-current-with-markdown', 'Expand Current Callout (with Markdown)', () => this.toggleCurrentCallout('expand', true));
 
     // Section Callouts (Visual Only)
-    this.registerCommand('toggle-section-visual', 'Toggle Section Callouts (Visual Only)', () => this.toggleSectionCallouts('toggle', false));
-    this.registerCommand('collapse-section-visual', 'Collapse Section Callouts (Visual Only)', () => this.toggleSectionCallouts('collapse', false));
-    this.registerCommand('expand-section-visual', 'Expand Section Callouts (Visual Only)', () => this.toggleSectionCallouts('expand', false));
+    this.registerCommand('toggle-section-visual', 'Toggle Section Callouts Uniformly (Visual Only)', () => this.toggleSectionCallouts('toggle'));
+    this.registerCommand('collapse-section-visual', 'Collapse Section Callouts (Visual Only)', () => this.toggleSectionCallouts('collapse'));
+    this.registerCommand('expand-section-visual', 'Expand Section Callouts (Visual Only)', () => this.toggleSectionCallouts('expand'));
 
     // Section Callouts (with Markdown) - Works in both Live Preview and Markdown modes
-    this.registerCommand('toggle-section-with-markdown', 'Toggle Section Callouts (with Markdown)', () => this.toggleSectionCallouts());
+    this.registerCommand('toggle-section-with-markdown', 'Toggle Section Callouts Uniformly (with Markdown)', () => this.toggleSectionCallouts());
     this.registerCommand('collapse-section-with-markdown', 'Collapse Section Callouts (with Markdown)', () => this.toggleSectionCallouts('collapse'));
     this.registerCommand('expand-section-with-markdown', 'Expand Section Callouts (with Markdown)', () => this.toggleSectionCallouts('expand'));
+    
+    // Add new Flip commands for sections
+    this.registerCommand('flip-section-visual', 'Flip Section Callouts Individually (Visual Only)', () => this.toggleSectionCallouts('toggle-individual'));
+    this.registerCommand('flip-section-with-markdown', 'Flip Section Callouts Individually (with Markdown)', () => this.toggleSectionCallouts('toggle-individual'));
   }
 
   /**
@@ -650,24 +658,35 @@ module.exports = class CalloutControlPlugin extends Plugin {
       
       if (matchingElements.length) {
         // Determine new state based on mode
-        let newState;
         if (mode === 'collapse') {
-          newState = true;
+          // All section callouts get collapsed
+          matchingElements.forEach(element => {
+            domService.applyCalloutCollapseState(element, true);
+          });
         } else if (mode === 'expand') {
-          newState = false;
-        } else { // toggle
+          // All section callouts get expanded
+          matchingElements.forEach(element => {
+            domService.applyCalloutCollapseState(element, false);
+          });
+        } else if (mode === 'toggle-individual') {
+          // Each section callout gets toggled individually
+          matchingElements.forEach(element => {
+            const currentState = element.classList.contains('is-collapsed');
+            domService.applyCalloutCollapseState(element, !currentState);
+          });
+        } else { // uniform toggle
           // Count current collapsed elements to determine majority
           const collapsedCount = matchingElements.filter(element => 
             element.classList.contains('is-collapsed')
           ).length;
           
-          newState = collapsedCount < matchingElements.length / 2;
+          const newState = collapsedCount < matchingElements.length / 2;
+          
+          // Apply to all matching elements
+          matchingElements.forEach(element => {
+            domService.applyCalloutCollapseState(element, newState);
+          });
         }
-        
-        // Apply to all matching elements
-        matchingElements.forEach(element => {
-          domService.applyCalloutCollapseState(element, newState);
-        });
       }
     }
   }
@@ -675,26 +694,11 @@ module.exports = class CalloutControlPlugin extends Plugin {
   /**
    * Process all callouts in the document
    * 
-   * @param {string} mode - 'toggle', 'collapse', or 'expand'
+   * @param {string} mode - 'toggle', 'collapse', 'expand', or 'toggle-individual'
    * @param {boolean} modifyMarkdown - Whether to update the Markdown
    */
   processCallouts(mode, modifyMarkdown = false) {
     this.applyCalloutOperation('all', mode, modifyMarkdown);
-  }
-  /**
-   * Toggle each callout individually based on its current state
-   */
-  toggleWithMarkdown() {
-    this.applyCalloutOperation('all', 'toggle-individual', true);
-  }
-  
-  /**
-   * Toggle each callout individually
-   * 
-   * @param {boolean} modifyMarkdown - Whether to update the Markdown (default: true)
-   */
-  toggleWithMarkdown() {
-    this.applyCalloutOperation('all', 'toggle-individual', true);
   }
   
   /**
@@ -710,7 +714,7 @@ module.exports = class CalloutControlPlugin extends Plugin {
   /**
    * Toggle/collapse/expand all callouts in the current section
    * 
-   * @param {string} mode - 'toggle', 'collapse', or 'expand'
+   * @param {string} mode - 'toggle', 'collapse', or 'expand', or 'toggle-individual'
    * @param {boolean} modifyMarkdown - Whether to update the Markdown
    */
   toggleSectionCallouts(mode = 'toggle', modifyMarkdown = true) {
