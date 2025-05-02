@@ -431,19 +431,19 @@ class CalloutControlSettingsTab extends PluginSettingTab {
   // eslint-disable-next-line no-unused-vars
   static COMMAND_GROUPS = {
     current: [
-      'toggle-current', 'collapse-current', 'expand-current',
-      'toggle-current-with-markdown', 'collapse-current-with-markdown',
-      'expand-current-with-markdown'
+      'toggle-current-visual', 'collapse-current-visual', 'expand-current-visual',
+      'toggle-current-markdown', 'collapse-current-markdown',
+      'expand-current-markdown'
     ],
     section: [
       'toggle-section-visual', 'collapse-section-visual', 'expand-section-visual', 'flip-section-visual',
-      'toggle-section-with-markdown', 'collapse-section-with-markdown',
-      'expand-section-with-markdown', 'flip-section-with-markdown'
+      'toggle-section-markdown', 'collapse-section-markdown',
+      'expand-section-markdown', 'flip-section-markdown'
     ],
     all: [
-      'toggle-all', 'collapse-all', 'expand-all', 'flip-all',
-      'toggle-all-with-markdown', 'collapse-all-with-markdown',
-      'expand-all-with-markdown', 'flip-all-with-markdown'
+      'toggle-all-visual', 'collapse-all-visual', 'expand-all-visual', 'flip-all-visual',
+      'toggle-all-markdown', 'collapse-all-markdown',
+      'expand-all-markdown', 'flip-all-markdown'
     ]
   };
 
@@ -518,13 +518,13 @@ class CalloutControlSettingsTab extends PluginSettingTab {
         }));
     currentSection.createEl('h4', { text: 'Visual' });
     const currentGroupEnabled = this.plugin.settings.groupsEnabled.current !== false;
-    this.createCommandToggle(currentSection, 'toggle-current', 'Toggle Current Callout (Visual Only)', !currentGroupEnabled);
-    this.createCommandToggle(currentSection, 'collapse-current', 'Collapse Current Callout (Visual Only)', !currentGroupEnabled);
-    this.createCommandToggle(currentSection, 'expand-current', 'Expand Current Callout (Visual Only)', !currentGroupEnabled);
+    this.createCommandToggle(currentSection, 'toggle-current-visual', 'Toggle Current Callout (Visual Only)', !currentGroupEnabled);
+    this.createCommandToggle(currentSection, 'collapse-current-visual', 'Collapse Current Callout (Visual Only)', !currentGroupEnabled);
+    this.createCommandToggle(currentSection, 'expand-current-visual', 'Expand Current Callout (Visual Only)', !currentGroupEnabled);
     currentSection.createEl('h4', { text: 'Markdown' });
-    this.createCommandToggle(currentSection, 'toggle-current-with-markdown', 'Toggle Current Callout (with Markdown)', !currentGroupEnabled);
-    this.createCommandToggle(currentSection, 'collapse-current-with-markdown', 'Collapse Current Callout (with Markdown)', !currentGroupEnabled);
-    this.createCommandToggle(currentSection, 'expand-current-with-markdown', 'Expand Current Callout (with Markdown)', !currentGroupEnabled);
+    this.createCommandToggle(currentSection, 'toggle-current-markdown', 'Toggle Current Callout (Markdown)', !currentGroupEnabled);
+    this.createCommandToggle(currentSection, 'collapse-current-markdown', 'Collapse Current Callout (Markdown)', !currentGroupEnabled);
+    this.createCommandToggle(currentSection, 'expand-current-markdown', 'Expand Current Callout (Markdown)', !currentGroupEnabled);
 
     // --- Section Group ---
     const sectionSection = containerEl.createDiv({ cls: 'callout-control-group' });
@@ -550,10 +550,10 @@ class CalloutControlSettingsTab extends PluginSettingTab {
     this.createCommandToggle(sectionSection, 'expand-section-visual', 'Expand Section Callouts (Visual Only)', !sectionGroupEnabled);
     this.createCommandToggle(sectionSection, 'flip-section-visual', 'Flip Section Callouts Individually (Visual Only)', !sectionGroupEnabled);
     sectionSection.createEl('h4', { text: 'Markdown' });
-    this.createCommandToggle(sectionSection, 'toggle-section-with-markdown', 'Toggle Section Callouts Uniformly (with Markdown)', !sectionGroupEnabled);
-    this.createCommandToggle(sectionSection, 'collapse-section-with-markdown', 'Collapse Section Callouts (with Markdown)', !sectionGroupEnabled);
-    this.createCommandToggle(sectionSection, 'expand-section-with-markdown', 'Expand Section Callouts (with Markdown)', !sectionGroupEnabled);
-    this.createCommandToggle(sectionSection, 'flip-section-with-markdown', 'Flip Section Callouts Individually (with Markdown)', !sectionGroupEnabled);
+    this.createCommandToggle(sectionSection, 'toggle-section-markdown', 'Toggle Section Callouts Uniformly (Markdown)', !sectionGroupEnabled);
+    this.createCommandToggle(sectionSection, 'collapse-section-markdown', 'Collapse Section Callouts (Markdown)', !sectionGroupEnabled);
+    this.createCommandToggle(sectionSection, 'expand-section-markdown', 'Expand Section Callouts (Markdown)', !sectionGroupEnabled);
+    this.createCommandToggle(sectionSection, 'flip-section-markdown', 'Flip Section Callouts Individually (Markdown)', !sectionGroupEnabled);
 
     // --- All Group ---
     const allSection = containerEl.createDiv({ cls: 'callout-control-group' });
@@ -574,15 +574,15 @@ class CalloutControlSettingsTab extends PluginSettingTab {
         }));
     allSection.createEl('h4', { text: 'Visual' });
     const allGroupEnabled = this.plugin.settings.groupsEnabled.all !== false;
-    this.createCommandToggle(allSection, 'toggle-all', 'Toggle All Callouts Uniformly (Visual Only)', !allGroupEnabled);
-    this.createCommandToggle(allSection, 'collapse-all', 'Collapse All Callouts (Visual Only)', !allGroupEnabled);
-    this.createCommandToggle(allSection, 'expand-all', 'Expand All Callouts (Visual Only)', !allGroupEnabled);
-    this.createCommandToggle(allSection, 'flip-all', 'Flip All Callouts Individually (Visual Only)', !allGroupEnabled);
+    this.createCommandToggle(allSection, 'toggle-all-visual', 'Toggle All Callouts Uniformly (Visual Only)', !allGroupEnabled);
+    this.createCommandToggle(allSection, 'collapse-all-visual', 'Collapse All Callouts (Visual Only)', !allGroupEnabled);
+    this.createCommandToggle(allSection, 'expand-all-visual', 'Expand All Callouts (Visual Only)', !allGroupEnabled);
+    this.createCommandToggle(allSection, 'flip-all-visual', 'Flip All Callouts Individually (Visual Only)', !allGroupEnabled);
     allSection.createEl('h4', { text: 'Markdown' });
-    this.createCommandToggle(allSection, 'toggle-all-with-markdown', 'Toggle All Callouts Uniformly (with Markdown)', !allGroupEnabled);
-    this.createCommandToggle(allSection, 'collapse-all-with-markdown', 'Collapse All Callouts (with Markdown)', !allGroupEnabled);
-    this.createCommandToggle(allSection, 'expand-all-with-markdown', 'Expand All Callouts (with Markdown)', !allGroupEnabled);
-    this.createCommandToggle(allSection, 'flip-all-with-markdown', 'Flip All Callouts Individually (with Markdown)', !allGroupEnabled);
+    this.createCommandToggle(allSection, 'toggle-all-markdown', 'Toggle All Callouts Uniformly (Markdown)', !allGroupEnabled);
+    this.createCommandToggle(allSection, 'collapse-all-markdown', 'Collapse All Callouts (Markdown)', !allGroupEnabled);
+    this.createCommandToggle(allSection, 'expand-all-markdown', 'Expand All Callouts (Markdown)', !allGroupEnabled);
+    this.createCommandToggle(allSection, 'flip-all-markdown', 'Flip All Callouts Individually (Markdown)', !allGroupEnabled);
   }
 
   // Helper to create a toggle for a specific command
@@ -680,14 +680,14 @@ module.exports = class CalloutControlPlugin extends Plugin {
   // Register all available commands based on settings
   registerAvailableCommands() {
     // Current Callout (Visual Only)
-    this.registerCommand('toggle-current', 'Toggle Current Callout (Visual Only)', () => this.toggleCurrentCallout());
-    this.registerCommand('collapse-current', 'Collapse Current Callout (Visual Only)', () => this.toggleCurrentCallout('collapse'));
-    this.registerCommand('expand-current', 'Expand Current Callout (Visual Only)', () => this.toggleCurrentCallout('expand'));
+    this.registerCommand('toggle-current-visual', 'Toggle Current Callout (Visual Only)', () => this.toggleCurrentCallout());
+    this.registerCommand('collapse-current-visual', 'Collapse Current Callout (Visual Only)', () => this.toggleCurrentCallout('collapse'));
+    this.registerCommand('expand-current-visual', 'Expand Current Callout (Visual Only)', () => this.toggleCurrentCallout('expand'));
 
-    // Current Callout (with Markdown)
-    this.registerCommand('toggle-current-with-markdown', 'Toggle Current Callout (with Markdown)', () => this.toggleCurrentCallout('toggle', true));
-    this.registerCommand('collapse-current-with-markdown', 'Collapse Current Callout (with Markdown)', () => this.toggleCurrentCallout('collapse', true));
-    this.registerCommand('expand-current-with-markdown', 'Expand Current Callout (with Markdown)', () => this.toggleCurrentCallout('expand', true));
+    // Current Callout (Markdown)
+    this.registerCommand('toggle-current-markdown', 'Toggle Current Callout (Markdown)', () => this.toggleCurrentCallout('toggle', true));
+    this.registerCommand('collapse-current-markdown', 'Collapse Current Callout (Markdown)', () => this.toggleCurrentCallout('collapse', true));
+    this.registerCommand('expand-current-markdown', 'Expand Current Callout (Markdown)', () => this.toggleCurrentCallout('expand', true));
 
     // Section Callouts (Visual Only)
     this.registerCommand('toggle-section-visual', 'Toggle Section Callouts Uniformly (Visual Only)', () => this.toggleSectionCallouts('toggle'));
@@ -695,23 +695,23 @@ module.exports = class CalloutControlPlugin extends Plugin {
     this.registerCommand('expand-section-visual', 'Expand Section Callouts (Visual Only)', () => this.toggleSectionCallouts('expand'));
     this.registerCommand('flip-section-visual', 'Flip Section Callouts Individually (Visual Only)', () => this.toggleSectionCallouts('toggle-individual'));
 
-    // Section Callouts (with Markdown)
-    this.registerCommand('toggle-section-with-markdown', 'Toggle Section Callouts Uniformly (with Markdown)', () => this.toggleSectionCallouts());
-    this.registerCommand('collapse-section-with-markdown', 'Collapse Section Callouts (with Markdown)', () => this.toggleSectionCallouts('collapse'));
-    this.registerCommand('expand-section-with-markdown', 'Expand Section Callouts (with Markdown)', () => this.toggleSectionCallouts('expand'));
-    this.registerCommand('flip-section-with-markdown', 'Flip Section Callouts Individually (with Markdown)', () => this.toggleSectionCallouts('toggle-individual'));
+    // Section Callouts (Markdown)
+    this.registerCommand('toggle-section-markdown', 'Toggle Section Callouts Uniformly (Markdown)', () => this.toggleSectionCallouts());
+    this.registerCommand('collapse-section-markdown', 'Collapse Section Callouts (Markdown)', () => this.toggleSectionCallouts('collapse'));
+    this.registerCommand('expand-section-markdown', 'Expand Section Callouts (Markdown)', () => this.toggleSectionCallouts('expand'));
+    this.registerCommand('flip-section-markdown', 'Flip Section Callouts Individually (Markdown)', () => this.toggleSectionCallouts('toggle-individual'));
 
     // All Callouts (Visual Only)
-    this.registerCommand('toggle-all', 'Toggle All Callouts Uniformly (Visual Only)', () => this.processCallouts('toggle'));
-    this.registerCommand('collapse-all', 'Collapse All Callouts (Visual Only)', () => this.processCallouts('collapse'));
-    this.registerCommand('expand-all', 'Expand All Callouts (Visual Only)', () => this.processCallouts('expand'));
-    this.registerCommand('flip-all', 'Flip All Callouts Individually (Visual Only)', () => this.processCallouts('toggle-individual'));
+    this.registerCommand('toggle-all-visual', 'Toggle All Callouts Uniformly (Visual Only)', () => this.processCallouts('toggle'));
+    this.registerCommand('collapse-all-visual', 'Collapse All Callouts (Visual Only)', () => this.processCallouts('collapse'));
+    this.registerCommand('expand-all-visual', 'Expand All Callouts (Visual Only)', () => this.processCallouts('expand'));
+    this.registerCommand('flip-all-visual', 'Flip All Callouts Individually (Visual Only)', () => this.processCallouts('toggle-individual'));
 
-    // All Callouts (with Markdown)
-    this.registerCommand('toggle-all-with-markdown', 'Toggle All Callouts Uniformly (with Markdown)', () => this.processCallouts('toggle', true));
-    this.registerCommand('collapse-all-with-markdown', 'Collapse All Callouts (with Markdown)', () => this.processCallouts('collapse', true));
-    this.registerCommand('expand-all-with-markdown', 'Expand All Callouts (with Markdown)', () => this.processCallouts('expand', true));
-    this.registerCommand('flip-all-with-markdown', 'Flip All Callouts Individually (with Markdown)', () => this.processCallouts('toggle-individual', true));
+    // All Callouts (Markdown)
+    this.registerCommand('toggle-all-markdown', 'Toggle All Callouts Uniformly (Markdown)', () => this.processCallouts('toggle', true));
+    this.registerCommand('collapse-all-markdown', 'Collapse All Callouts (Markdown)', () => this.processCallouts('collapse', true));
+    this.registerCommand('expand-all-markdown', 'Expand All Callouts (Markdown)', () => this.processCallouts('expand', true));
+    this.registerCommand('flip-all-markdown', 'Flip All Callouts Individually (Markdown)', () => this.processCallouts('toggle-individual', true));
   }
   
   // Refresh commands based on updated settings
