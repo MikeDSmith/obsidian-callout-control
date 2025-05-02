@@ -327,21 +327,6 @@ class DOMCalloutService {
   }
   
   /**
-   * Get callout info from a DOM element
-   * 
-   * @param {HTMLElement} element - The callout DOM element
-   * @returns {Object} Basic info about the callout
-   */
-  getCalloutInfoFromElement(element) {
-    const titleEl = element.querySelector('.callout-title-inner');
-    const title = titleEl?.textContent?.trim() || '';
-    const type = element.getAttribute('data-callout') || '';
-    const isCollapsed = element.classList.contains('is-collapsed');
-    
-    return { title, type, isCollapsed };
-  }
-  
-  /**
    * Apply collapse/expand state to a callout DOM element
    * 
    * @param {HTMLElement} callout - The callout DOM element
@@ -359,6 +344,33 @@ class DOMCalloutService {
       foldIcon?.classList.toggle('is-collapsed', collapsed);
       content?.setAttribute('style', collapsed ? 'display: none;' : '');
     }
+  }
+  
+  /**
+   * Apply collapse/expand state to all callout DOM elements
+   * 
+   * @param {boolean} collapsed - Whether to collapse all callouts
+   */
+  applyToAllCallouts(collapsed) {
+    const callouts = this.getAllCalloutElements();
+    callouts.forEach(callout => {
+      this.applyCalloutCollapseState(callout, collapsed);
+    });
+  }
+  
+  /**
+   * Get callout info from a DOM element
+   * 
+   * @param {HTMLElement} element - The callout DOM element
+   * @returns {Object} Basic info about the callout
+   */
+  getCalloutInfoFromElement(element) {
+    const titleEl = element.querySelector('.callout-title-inner');
+    const title = titleEl?.textContent?.trim() || '';
+    const type = element.getAttribute('data-callout') || '';
+    const isCollapsed = element.classList.contains('is-collapsed');
+    
+    return { title, type, isCollapsed };
   }
   
   /**
@@ -380,222 +392,6 @@ class DOMCalloutService {
     }
     
     return null;
-  }
-}
-
-/**
- * CalloutSyncService bridges the MarkdownService and DOMService
- * This class is responsible for keeping the two representations in sync
- */
-class CalloutSyncService {
-  /**
-   * Creates a new callout sync service
-   * 
-   * @param {CalloutMarkdownService} markdownService - The markdown service instance
-   * @param {DOMCalloutService} domService - The DOM service instance
-   */
-  constructor(markdownService, domService) {
-    this.markdownService = markdownService;
-    this.domService = domService;
-    this.calloutMap = new Map(); // Maps from unique IDs to callout info
-    this.refreshCallouts();
-  }
-
-  /**
-   * Refreshes the callout information map
-   */
-  refreshCallouts() {
-    if (!this.markdownService || !this.domService) return;
-    
-    // Get all callouts from the markdown
-    const markdownCallouts = this.markdownService.detectAllCallouts();
-    
-    // Get all callouts from the DOM
-    const domCallouts = this.domService.getAllCalloutElements();
-    
-    this.calloutMap.clear();
-    
-    // Match DOM callouts with markdown callouts
-    domCallouts.forEach((domElement, index) => {
-      const { title, type, isCollapsed } = this.domService.getCalloutInfoFromElement(domElement);
-      
-      // Generate a unique ID for this callout
-      const uniqueId = `callout-${index}`;
-      
-      // Try to find a corresponding markdown callout
-      const matchingMarkdownCallout = this.findMatchingMarkdownCallout(
-        markdownCallouts, 
-        title, 
-        type, 
-        isCollapsed
-      );
-      
-      // Store information about this callout for later use
-      this.calloutMap.set(uniqueId, {
-        domElement,
-        title,
-        type,
-        isCollapsed,
-        markdownCallout: matchingMarkdownCallout
-      });
-    });
-  }
-  
-  /**
-   * Find the best matching markdown callout for a DOM callout
-   * 
-   * @param {Array<CalloutInfo>} markdownCallouts - Array of callouts from Markdown
-   * @param {string} title - The title from the DOM callout
-   * @param {string} type - The callout type from the DOM
-   * @param {boolean} isCollapsed - Whether the DOM callout is collapsed
-   * @returns {CalloutInfo|undefined} The matching Markdown callout or undefined
-   */
-  findMatchingMarkdownCallout(markdownCallouts, title, type, isCollapsed) {
-    // First try: exact match on title and type and collapse state
-    let match = markdownCallouts.find(c => 
-      c.title === title && 
-      c.type === type && 
-      c.isCollapsed === isCollapsed
-    );
-    
-    if (match) return match;
-    
-    // Second try: match on title and type only
-    match = markdownCallouts.find(c => 
-      c.title === title && 
-      c.type === type
-    );
-    
-    if (match) return match;
-    
-    // Third try: match on title only (less reliable)
-    match = markdownCallouts.find(c => c.title === title);
-    
-    if (match) return match;
-    
-    // Fourth try: fuzzy title match as last resort
-    return markdownCallouts.find(c => 
-      title.includes(c.title) || 
-      c.title.includes(title)
-    );
-  }
-  
-  /**
-   * Get all callout elements that have been matched
-   * 
-   * @returns {Array<CalloutMapInfo>} Array of callout info objects
-   */
-  getAllCallouts() {
-    return Array.from(this.calloutMap.values())
-      .filter(info => info.domElement);
-  }
-  
-  /**
-   * Get callout element at a specific line number
-   * 
-   * @param {number} lineNumber - The line number to search for
-   * @returns {CalloutMapInfo|undefined} The callout info at that line or undefined
-   */
-  getCalloutAtLine(lineNumber) {
-    return Array.from(this.calloutMap.values())
-      .find(info => 
-        info.markdownCallout && 
-        info.markdownCallout.startLine === lineNumber
-      );
-  }
-  
-  /**
-   * Get all callouts between startLine and endLine (inclusive)
-   * 
-   * @param {number} startLine - The starting line number
-   * @param {number} endLine - The ending line number
-   * @returns {Array<CalloutMapInfo>} Callouts in the range
-   */
-  getCalloutsInRange(startLine, endLine) {
-    return Array.from(this.calloutMap.values())
-      .filter(info => 
-        info.markdownCallout && 
-        info.markdownCallout.startLine >= startLine && 
-        info.markdownCallout.startLine <= endLine
-      );
-  }
-  
-  /**
-   * Update the state of a callout in both DOM and Markdown
-   * 
-   * @param {CalloutMapInfo} calloutInfo - The callout info object
-   * @param {boolean} newCollapsedState - The new collapse state
-   * @returns {boolean} True if update was successful
-   */
-  updateCalloutState(calloutInfo, newCollapsedState) {
-    let success = true;
-    
-    // Update the DOM
-    if (calloutInfo.domElement) {
-      this.domService.applyCalloutCollapseState(calloutInfo.domElement, newCollapsedState);
-    }
-    
-    // Update the Markdown
-    if (calloutInfo.markdownCallout) {
-      success = this.markdownService.updateCalloutCollapseState(
-        calloutInfo.markdownCallout, 
-        newCollapsedState
-      );
-    }
-    
-    return success;
-  }
-  
-  /**
-   * Find the callout containing the given line in the document
-   * 
-   * @param {number} lineNumber - The line number to check
-   * @returns {CalloutMapInfo|undefined} The containing callout or undefined
-   */
-  findCalloutContainingLine(lineNumber) {
-    const markdownCallout = this.markdownService.findCalloutContainingLine(lineNumber);
-    if (!markdownCallout) return null;
-    
-    return Array.from(this.calloutMap.values())
-      .find(info => 
-        info.markdownCallout && 
-        info.markdownCallout.startLine === markdownCallout.startLine
-      );
-  }
-  
-  /**
-   * Get all callouts in the current section
-   * 
-   * @param {number} cursorLine - The line to use as reference
-   * @returns {Array<CalloutMapInfo>} Callouts in the section
-   */
-  getCalloutsInCurrentSection(cursorLine) {
-    const sectionCallouts = this.markdownService.getCalloutsInCurrentSection(cursorLine);
-    
-    return Array.from(this.calloutMap.values())
-      .filter(info => 
-        info.markdownCallout && 
-        sectionCallouts.some(sc => 
-          sc.startLine === info.markdownCallout.startLine
-        )
-      );
-  }
-  
-  /**
-   * Get the closest callout to the cursor
-   * 
-   * @param {number} cursorLine - The current cursor line
-   * @returns {CalloutMapInfo|undefined} The closest callout or undefined
-   */
-  getClosestCalloutToCursor(cursorLine) {
-    const closestMarkdownCallout = this.markdownService.getClosestCalloutToCursor(cursorLine);
-    if (!closestMarkdownCallout) return null;
-    
-    return Array.from(this.calloutMap.values())
-      .find(info => 
-        info.markdownCallout && 
-        info.markdownCallout.startLine === closestMarkdownCallout.startLine
-      );
   }
 }
 
@@ -691,14 +487,12 @@ module.exports = class CalloutControlPlugin extends Plugin {
     const modeService = new EditorModeService(this.app);
     const markdownService = new CalloutMarkdownService(editor);
     const domService = new DOMCalloutService(root);
-    const syncService = new CalloutSyncService(markdownService, domService);
     
     return {
       editor,
       modeService,
       markdownService,
-      domService,
-      syncService
+      domService
     };
   }
   
@@ -717,8 +511,8 @@ module.exports = class CalloutControlPlugin extends Plugin {
     const { 
       editor, 
       modeService, 
-      markdownService, 
-      syncService 
+      markdownService,
+      domService
     } = services;
     
     const cursor = editor.getCursor();
@@ -726,9 +520,9 @@ module.exports = class CalloutControlPlugin extends Plugin {
     // Check if we're in markdown mode
     const inMarkdownMode = modeService.isInMarkdownMode();
     
-    // If in markdown mode and we're modifying markdown, use direct markdown methods
-    if (inMarkdownMode && modifyMarkdown) {
-      // Get the relevant callouts based on scope
+    // If we're modifying markdown (for "with markdown" commands)
+    if (modifyMarkdown) {
+      // Determine which callouts to modify based on scope
       let callouts = [];
       if (scope === 'all') {
         callouts = markdownService.detectAllCallouts();
@@ -760,135 +554,120 @@ module.exports = class CalloutControlPlugin extends Plugin {
         getNewState = () => shouldCollapse;
       }
       
-      // Update each callout
+      // Update each callout in the Markdown
       sortedCallouts.forEach(callout => {
         markdownService.updateCalloutCollapseState(callout, getNewState(callout));
       });
       
+      // No need to update DOM - Obsidian will handle that
       return;
     }
     
-    // For Live Preview mode or visual-only operations
+    // For Visual-only operations (no Markdown modification)
     
     // Handle the different scopes
     if (scope === 'all') {
-      const callouts = syncService.getAllCallouts();
-      if (!callouts.length) return;
-      
-      try {
-        // Determine new state based on mode
-        let getNewState;
-        if (mode === 'collapse') {
-          getNewState = () => true;
-        } else if (mode === 'expand') {
-          getNewState = () => false;
-        } else if (mode === 'toggle-individual') {
-          getNewState = (calloutInfo) => 
-            !calloutInfo.domElement.classList.contains('is-collapsed');
-        } else { // uniform toggle
-          const firstState = callouts[0].domElement.classList.contains('is-collapsed');
-          getNewState = () => !firstState;
-        }
-        
-        // Apply to all callouts
-        callouts.forEach(calloutInfo => {
-          const newState = getNewState(calloutInfo);
-          
-          // Update DOM and Markdown
-          if (modifyMarkdown) {
-            syncService.updateCalloutState(calloutInfo, newState);
-          } else {
-            services.domService.applyCalloutCollapseState(calloutInfo.domElement, newState);
-          }
-        });
-      } catch (err) {
-        console.error("Toggle Callouts Plugin error:", err);
-      }
-    } else if (scope === 'current') {
-      // Find the callout containing or near the cursor
-      const markdownCallout = markdownService.findCalloutContainingLine(cursor.line) || 
-                            markdownService.findCalloutAboveCursor(cursor.line);
-      
-      if (!markdownCallout) return;
-      
-      // Find the matching DOM element
-      let calloutInfo = syncService.getCalloutAtLine(markdownCallout.startLine);
-      
-      // If no match through the matcher, try direct DOM lookup
-      if (!calloutInfo) {
-        const domElement = services.domService.findCalloutElementByTitle(markdownCallout.title);
-        
-        if (domElement) {
-          calloutInfo = {
-            domElement,
-            markdownCallout
-          };
-        } else {
-          return;
-        }
-      }
+      // For visual-only operations, just update all DOM elements
+      const allCallouts = domService.getAllCalloutElements();
+      if (!allCallouts.length) return;
       
       // Determine new state based on mode
-      let newState;
       if (mode === 'collapse') {
-        newState = true;
+        // All callouts get collapsed
+        domService.applyToAllCallouts(true);
       } else if (mode === 'expand') {
-        newState = false;
-      } else { // toggle
-        newState = !calloutInfo.domElement.classList.contains('is-collapsed');
+        // All callouts get expanded
+        domService.applyToAllCallouts(false);
+      } else if (mode === 'toggle-individual') {
+        // Each callout gets toggled individually
+        allCallouts.forEach(element => {
+          const currentState = element.classList.contains('is-collapsed');
+          domService.applyCalloutCollapseState(element, !currentState);
+        });
+      } else { // uniform toggle
+        // Base the toggle on the first callout's state
+        const newState = !allCallouts[0].classList.contains('is-collapsed');
+        domService.applyToAllCallouts(newState);
+      }
+    } else if (scope === 'current') {
+      // Find the callout containing the cursor
+      const calloutElements = domService.getAllCalloutElements();
+      if (!calloutElements.length) return;
+      
+      // For visual operations, just use the DOM elements
+      // Find the callout that contains the cursor or is closest
+      const markdownCallout = markdownService.findCalloutContainingLine(cursor.line) || 
+                            markdownService.findCalloutAboveCursor(cursor.line);
+      if (!markdownCallout) return;
+      
+      // Go through callout elements to find one that matches (approximately)
+      // This is a simplified approach without the sync service mapping
+      let targetElement = null;
+      
+      calloutElements.forEach(element => {
+        const titleElement = element.querySelector('.callout-title-inner');
+        if (titleElement && titleElement.textContent.trim() === markdownCallout.title) {
+          targetElement = element;
+        }
+      });
+      
+      if (!targetElement && calloutElements.length > 0) {
+        // Fallback: just use the first callout if we can't find a match
+        targetElement = calloutElements[0];
       }
       
-      // Apply the change
-      if (modifyMarkdown) {
-        syncService.updateCalloutState(calloutInfo, newState);
-      } else {
-        services.domService.applyCalloutCollapseState(calloutInfo.domElement, newState);
+      if (targetElement) {
+        let newState;
+        if (mode === 'collapse') {
+          newState = true;
+        } else if (mode === 'expand') {
+          newState = false;
+        } else { // toggle
+          newState = !targetElement.classList.contains('is-collapsed');
+        }
+        
+        domService.applyCalloutCollapseState(targetElement, newState);
       }
     } else if (scope === 'section') {
       // Get all callouts in the current section
       const sectionCallouts = markdownService.getCalloutsInCurrentSection(cursor.line);
       if (!sectionCallouts.length) return;
       
-      try {
-        // Process each callout in the section
-        sectionCallouts.forEach(markdownCallout => {
-          // Find the callout in the DOM
-          let calloutInfo = syncService.getCalloutAtLine(markdownCallout.startLine);
-          
-          if (!calloutInfo) {
-            // Try direct DOM lookup
-            const domElement = services.domService.findCalloutElementByTitle(markdownCallout.title);
-            
-            if (domElement) {
-              calloutInfo = { domElement, markdownCallout };
-            }
+      // Visual-only operation - find matching DOM elements
+      const calloutElements = domService.getAllCalloutElements();
+      const matchingElements = [];
+      
+      // Match section callouts with DOM elements (simplified approach)
+      calloutElements.forEach(element => {
+        const titleElement = element.querySelector('.callout-title-inner');
+        if (titleElement) {
+          const title = titleElement.textContent.trim();
+          if (sectionCallouts.some(callout => callout.title === title)) {
+            matchingElements.push(element);
           }
+        }
+      });
+      
+      if (matchingElements.length) {
+        // Determine new state based on mode
+        let newState;
+        if (mode === 'collapse') {
+          newState = true;
+        } else if (mode === 'expand') {
+          newState = false;
+        } else { // toggle
+          // Count current collapsed elements to determine majority
+          const collapsedCount = matchingElements.filter(element => 
+            element.classList.contains('is-collapsed')
+          ).length;
           
-          // Determine new state based on mode
-          let newState;
-          if (mode === 'collapse') {
-            newState = true;
-          } else if (mode === 'expand') {
-            newState = false;
-          } else { // toggle
-            const currentState = calloutInfo ? 
-              calloutInfo.domElement.classList.contains('is-collapsed') : 
-              markdownCallout.isCollapsed;
-            newState = !currentState;
-          }
-          
-          // Update Markdown
-          if (modifyMarkdown) {
-            markdownService.updateCalloutCollapseState(markdownCallout, newState);
-          }
-          
-          // Update DOM if element found
-          if (calloutInfo && calloutInfo.domElement) {
-            services.domService.applyCalloutCollapseState(calloutInfo.domElement, newState);
-          }
+          newState = collapsedCount < matchingElements.length / 2;
+        }
+        
+        // Apply to all matching elements
+        matchingElements.forEach(element => {
+          domService.applyCalloutCollapseState(element, newState);
         });
-      } catch (err) {
-        console.error("Toggle Callouts Plugin error:", err);
       }
     }
   }
@@ -901,6 +680,12 @@ module.exports = class CalloutControlPlugin extends Plugin {
    */
   processCallouts(mode, modifyMarkdown = false) {
     this.applyCalloutOperation('all', mode, modifyMarkdown);
+  }
+  /**
+   * Toggle each callout individually based on its current state
+   */
+  toggleWithMarkdown() {
+    this.applyCalloutOperation('all', 'toggle-individual', true);
   }
   
   /**
@@ -931,4 +716,4 @@ module.exports = class CalloutControlPlugin extends Plugin {
   toggleSectionCallouts(mode = 'toggle', modifyMarkdown = true) {
     this.applyCalloutOperation('section', mode, modifyMarkdown);
   }
-}
+};
