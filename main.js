@@ -480,22 +480,6 @@ class CalloutControlSettingsTab extends PluginSettingTab {
     containerEl.createEl('h2', { text: 'Callout Control Settings' });
     containerEl.createEl('p', { text: 'Toggle which commands are available in the command palette.' });
 
-    // Add CSS for styling group toggles
-    const styleEl = document.createElement('style');
-    styleEl.textContent = `
-      .callout-control-group-toggle {
-        background-color: var(--background-secondary);
-        border-radius: 5px;
-        padding: 8px 12px;
-        margin-bottom: 8px;
-        border-left: 4px solid var(--interactive-accent);
-      }
-      .callout-control-group-toggle .setting-item-name {
-        font-weight: bold;
-      }
-    `;
-    containerEl.appendChild(styleEl);
-
     // Individual command toggles
     containerEl.createEl('h3', { text: 'Command Settings' });
     
@@ -504,7 +488,7 @@ class CalloutControlSettingsTab extends PluginSettingTab {
     
     // Current Callout group toggle
     const currentToggleSetting = new Setting(containerEl)
-      .setName('Enable Current Callout Commands')
+      .setName('Current')
       .setDesc('Toggle all commands that affect the current callout')
       .addToggle(toggle => toggle
         .setValue(this.plugin.settings.groupsEnabled.current || false)
@@ -522,9 +506,6 @@ class CalloutControlSettingsTab extends PluginSettingTab {
           // Redraw the settings panel to update the disabled state of individual toggles
           this.display();
         }));
-    
-    // Add styling to the toggle
-    currentToggleSetting.settingEl.addClass('callout-control-group-toggle');
     
     // Current Callout (Visual Only)
     containerEl.createEl('h4', { text: 'Current Callout (Visual Only)' });
@@ -565,9 +546,6 @@ class CalloutControlSettingsTab extends PluginSettingTab {
           // Redraw the settings panel to update the disabled state of individual toggles
           this.display();
         }));
-    
-    // Add styling to the toggle
-    sectionToggleSetting.settingEl.addClass('callout-control-group-toggle');
     
     // Section Callouts (Visual Only)
     containerEl.createEl('h4', { text: 'Section Callouts (Visual Only)' });
@@ -610,9 +588,6 @@ class CalloutControlSettingsTab extends PluginSettingTab {
           // Redraw the settings panel to update the disabled state of individual toggles
           this.display();
         }));
-    
-    // Add styling to the toggle
-    allToggleSetting.settingEl.addClass('callout-control-group-toggle');
     
     // All Callouts (Visual Only)
     containerEl.createEl('h4', { text: 'All Callouts (Visual Only)' });
