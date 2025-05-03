@@ -10,10 +10,11 @@
 
 ## 🚀 Quick Start
 
-1. Install the plugin and enable it in Community Plugins
-2. Open a note with callouts in Live Preview mode
-3. Use the Command Palette (`Ctrl/Cmd+P`) and search for "Callout Control"
-4. Try the "Toggle Current Callout" command when your cursor is near a callout
+1. Install the plugin from GitHub (see [Installation](#-installation) below)
+2. Enable it in Community Plugins
+3. Open a note with callouts in Live Preview mode
+4. Use the Command Palette (`Ctrl/Cmd+P`) and search for "Callout Control"
+5. Try the "Toggle Current Callout" command when your cursor is near a callout
 
 ## 📋 Table of Contents
 
@@ -32,33 +33,29 @@
 
 ## ✨ Features
 
-- **Toggle, collapse, or expand callouts** with keyboard shortcuts:
-  - All visible callouts at once
-  - Only the callout under your cursor
-  - All callouts in the current section
+**Callout Control** gives you keyboard shortcuts to efficiently work with callouts in Obsidian:
 
-- **Command behaviors:**
-  - **Uniform behavior:** Commands that apply the same state to all affected callouts
-  - **Individual behavior:** Commands that toggle each callout based on its current state
-  
-- **Visual or Markdown updates:**
-  - Visual-only changes (appearance only)
-  - Markdown updates (sync visual state by updating `+`/`-` markers)
+- **Control callouts at different scopes:**
+  - Individual callout under your cursor
+  - All callouts in the current section
+  - All callouts in the entire document
+
+- **Choose between visual-only or Markdown updates:**
+  - Visual mode changes appearance without modifying your document
+  - Markdown mode syncs the visual state by updating `+`/`-` markers in your document
 
 > **Note:** Visual commands affect only callouts currently rendered on screen due to Obsidian's virtual scrolling. Markdown commands work regardless of scroll position.
 
 ## 🔌 Installation
 
-The plugin is currently in development and not yet available in the Obsidian Community Plugins browser.
-
-### From GitHub
+### Manual Installation (GitHub)
 
 1. Download the [latest release](https://github.com/MikeDSmith/obsidian-callout-control/releases)
 2. Create a folder in your vault's plugin directory: `.obsidian/plugins/obsidian-callout-control/`
 3. Extract `main.js` and `manifest.json` into that folder
 4. In Obsidian, go to **Settings → Community Plugins**, click **Reload plugins** and enable **Callout Control**
 
-> **Note:** This plugin is not yet available in the Obsidian Community Plugins browser. Once approved, you'll be able to install it directly from within Obsidian.
+> **Note:** This plugin is currently in development and has not yet been submitted for inclusion in the Obsidian Community Plugins browser. Once development is complete and the plugin is approved, you'll be able to install it directly from within Obsidian.
 
 ## 🚀 Usage
 
@@ -67,12 +64,17 @@ After installation, you can:
 1. Use the Command Palette (`Ctrl/Cmd+P`) and search for "Callout Control" commands
 2. Set up keyboard shortcuts in **Settings → Hotkeys → Callout Control**
 
-### Recommended Hotkeys
+### Setting Up Hotkeys
 
-Consider setting up these keyboard shortcuts for efficient workflow:
-- **Collapse:** `Shift` + `Cmd` + `<`
-- **Expand:** `Shift` + `Cmd` + `>`
-- **Toggle:** `Shift` + `Cmd` + `/`
+For a more efficient workflow, consider assigning keyboard shortcuts to the commands you use most frequently:
+
+1. Go to **Settings → Hotkeys**
+2. Search for "Callout Control"
+3. Click the plus icon next to any command to assign a hotkey
+
+Choose hotkeys that feel intuitive to you and don't conflict with other commands you use regularly. Consider which callout operations you perform most often in your workflow and prioritize those for hotkey assignments.
+
+> **Note:** Only commands that are enabled in the settings panel will appear in the hotkeys list. If you don't see a command you want to assign a hotkey to, make sure it's enabled in **Settings → Community Plugins → Callout Control → Settings**.
 
 ### Using With Custom Callouts
 
@@ -86,34 +88,51 @@ This plugin works with both standard Obsidian callouts and any custom callouts y
 
 ## 🧮 Commands
 
-| Scope   | Action   | Visual Only                      | With Markdown                              |
-|---------|----------|----------------------------------|---------------------------------------------|
-| All     | Toggle   | Toggle All Callouts (Uniform)    | Toggle All Callouts (Individually)          |
-| All     | Collapse | Collapse All Callouts (Uniform)  | Collapse All Callouts (Uniform)             |
-| All     | Expand   | Expand All Callouts (Uniform)    | Expand All Callouts (Uniform)               |
-| Current | Toggle   | Toggle Current Callout           | Toggle Current Callout (with Markdown)      |
-| Current | Collapse | Collapse Current Callout         | Collapse Current Callout (with Markdown)    |
-| Current | Expand   | Expand Current Callout           | Expand Current Callout (with Markdown)      |
-| Section | Toggle   | Toggle Section Callouts          | Toggle Section Callouts (with Markdown)     |
-| Section | Collapse | Collapse Section Callouts        | Collapse Section Callouts (with Markdown)   |
-| Section | Expand   | Expand Section Callouts          | Expand Section Callouts (with Markdown)     |
+Callout Control provides commands that affect callouts at different scopes, with options for both visual-only changes and Markdown updates.
+
+### Command Types
+
+- **Visual-only commands**: Change the appearance without updating the Markdown
+- **Markdown commands**: Update the `+`/`-` markers in your document and change the appearance
+
+### Command Actions
+
+- **Toggle Uniformly**: Sets all affected callouts to the same state (based on the majority state)
+- **Collapse/Expand**: Sets all affected callouts to collapsed or expanded state
+- **Flip Individually**: Toggles each callout to its opposite state (expanded becomes collapsed, and vice versa)
+
+### Available Commands
+
+| Scope   | Action   | Visual Only Command                          | Markdown Command                             |
+|---------|----------|----------------------------------------------|---------------------------------------------|
+| All     | Toggle   | Toggle All Callouts Uniformly (Visual Only)  | Toggle All Callouts Uniformly (Markdown)    |
+| All     | Collapse | Collapse All Callouts (Visual Only)          | Collapse All Callouts (Markdown)            |
+| All     | Expand   | Expand All Callouts (Visual Only)            | Expand All Callouts (Markdown)              |
+| All     | Flip     | Flip All Callouts Individually (Visual Only) | Flip All Callouts Individually (Markdown)   |
+| Current | Toggle   | Toggle Current Callout (Visual Only)         | Toggle Current Callout (Markdown)           |
+| Current | Collapse | Collapse Current Callout (Visual Only)       | Collapse Current Callout (Markdown)         |
+| Current | Expand   | Expand Current Callout (Visual Only)         | Expand Current Callout (Markdown)           |
+| Section | Toggle   | Toggle Section Callouts Uniformly (Visual Only) | Toggle Section Callouts Uniformly (Markdown) |
+| Section | Collapse | Collapse Section Callouts (Visual Only)      | Collapse Section Callouts (Markdown)        |
+| Section | Expand   | Expand Section Callouts (Visual Only)        | Expand Section Callouts (Markdown)          |
+| Section | Flip     | Flip Section Callouts Individually (Visual Only) | Flip Section Callouts Individually (Markdown) |
 
 ## 🔄 Toggle Behavior
 
 | Behavior Type | Description                                                   |
 |---------------|---------------------------------------------------------------|
-| **Uniform**   | All affected callouts are set to the same state (used by most commands) |
-| **Individual** | Each callout toggles based on its current state (`+` or `-`) (used only by "Toggle All Callouts (Individually)" command) |
+| **Uniform**   | All affected callouts are set to the same state (used by Toggle, Collapse, and Expand commands) |
+| **Individual** | Each callout toggles based on its current state (`+` or `-`) (used by Flip commands) |
 
-> **Note on Toggle All (with Markdown):** Unlike the visual toggle (which applies a uniform state), the markdown version toggles each callout based on its own current state. This allows for more nuanced control but can result in a mix of expanded and collapsed callouts.
+> **Note on Toggle Behavior:** Toggle commands now apply a uniform state to all affected callouts, meaning all callouts will end up in the same state (all expanded or all collapsed). For individual toggling (where each callout flips to its opposite state), use the new Flip commands.
 
 ## 📊 Examples
 
-### Toggle All Callouts (Uniform)
+### Toggle All Callouts Uniformly
 ![Toggle All Callouts Uniform](https://github.com/MikeDSmith/obsidian-callout-control/raw/main/demo/toggle-all-uniform.gif)
 
-### Toggle All Callouts (Individual)
-![Toggle All Callouts Individual](https://github.com/MikeDSmith/obsidian-callout-control/raw/main/demo/toggle-all-individual.gif)
+### Flip All Callouts Individually
+![Flip All Callouts Individual](https://github.com/MikeDSmith/obsidian-callout-control/raw/main/demo/toggle-all-individual.gif)
 
 ### Toggle Current Callout
 ![Toggle Current Callout](https://github.com/MikeDSmith/obsidian-callout-control/raw/main/demo/toggle-current.gif)
@@ -123,7 +142,20 @@ This plugin works with both standard Obsidian callouts and any custom callouts y
 
 ## ⚙️ Configuration
 
-Currently, Callout Control has no configuration settings. All functionality is accessible through commands.
+Callout Control includes a settings panel that allows you to enable or disable specific commands based on your workflow preferences.
+
+### Settings Panel
+
+To access the settings panel:
+1. Go to **Settings → Community Plugins → Callout Control → Settings**
+2. Use the toggles to enable or disable specific commands or entire command groups
+
+The settings panel organizes commands into three main groups:
+- **Current:** Commands that affect the callout under your cursor
+- **Section:** Commands that affect callouts in the current section  
+- **All:** Commands that affect all callouts in the document
+
+Each group has toggles for both Visual and Markdown commands, allowing you to customize exactly which commands appear in your Command Palette.
 
 ## ❓ FAQ
 
