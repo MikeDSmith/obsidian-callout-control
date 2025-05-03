@@ -258,48 +258,6 @@ class CalloutMarkdownService {
       callout.endLine <= sectionEnd
     );
   }
-  
-  /**
-   * Get the closest callout to the cursor position
-   * 
-   * @param {number} cursorLine - The current cursor line
-   * @returns {CalloutInfo|null} The closest callout or null
-   */
-  getClosestCalloutToCursor(cursorLine) {
-    const containingCallout = this.findCalloutContainingLine(cursorLine);
-    if (containingCallout) return containingCallout;
-    
-    const allCallouts = this.detectAllCallouts();
-    if (!allCallouts.length) return null;
-    
-    return allCallouts.sort((a, b) => {
-      const distA = Math.abs(a.startLine - cursorLine);
-      const distB = Math.abs(b.startLine - cursorLine);
-      return distA - distB;
-    })[0];
-  }
-  
-  /**
-   * Scan upward from cursor to find the closest callout
-   * 
-   * @param {number} cursorLine - The current cursor line
-   * @returns {CalloutInfo|null} The closest callout above or null
-   */
-  findCalloutAboveCursor(cursorLine) {
-    if (!this.editor) return null;
-    
-    const lines = this.editor.getValue().split('\n');
-    let lineIndex = cursorLine;
-    
-    while (lineIndex >= 0) {
-      if (this.isCalloutStartLine(lines[lineIndex])) {
-        return this.processCallout(lines, lineIndex);
-      }
-      lineIndex--;
-    }
-    
-    return null;
-  }
 }
 
 /**
@@ -334,7 +292,7 @@ class DOMCalloutService {
    */
   applyCalloutCollapseState(callout, collapsed) {
     if (!callout) return;
-    
+
     const content = callout.querySelector('.callout-content');
     const foldIcon = callout.querySelector('.callout-fold');
 
@@ -345,7 +303,7 @@ class DOMCalloutService {
       content?.setAttribute('style', collapsed ? 'display: none;' : '');
     }
   }
-  
+
   /**
    * Apply collapse/expand state to all callout DOM elements
    * 
@@ -359,39 +317,60 @@ class DOMCalloutService {
   }
   
   /**
-   * Get callout info from a DOM element
+   * Get all callout DOM elements within the current section (between headings)
    * 
-   * @param {HTMLElement} element - The callout DOM element
-   * @returns {Object} Basic info about the callout
+   * @param {number} cursorLine - The line number where the cursor is located
+   * @param {Array<string>} lines - All lines in the document
+   * @returns {Array<HTMLElement>} Array of callout DOM elements in the current section
    */
-  getCalloutInfoFromElement(element) {
-    const titleEl = element.querySelector('.callout-title-inner');
-    const title = titleEl?.textContent?.trim() || '';
-    const type = element.getAttribute('data-callout') || '';
-    const isCollapsed = element.classList.contains('is-collapsed');
-    
-    return { title, type, isCollapsed };
-  }
-  
-  /**
-   * Find callout element by title
-   * 
-   * @param {string} title - The callout title to find
-   * @returns {HTMLElement|null} The found callout or null
-   */
-  findCalloutElementByTitle(title) {
-    if (!this.root) return null;
-    
-    const calloutElements = this.root.querySelectorAll('.callout');
-    for (const el of calloutElements) {
-      const titleEl = el.querySelector('.callout-title-inner');
-      const elTitle = titleEl?.textContent?.trim();
-      if (elTitle === title) {
-        return el;
-      }
+  getCalloutsInCurrentSection(cursorLine, lines) {
+    let sectionStart = cursorLine;
+    let sectionEnd = cursorLine;
+
+    // Determine section boundaries based on headings
+    while (sectionStart >= 0 && !lines[sectionStart].startsWith('#')) {
+      sectionStart--;
     }
-    
-    return null;
+    while (sectionEnd < lines.length && !lines[sectionEnd].startsWith('#')) {
+      sectionEnd++;
+    }
+
+    return this.getAllCalloutElements().filter(element => {
+      const calloutContent = element.querySelector('.callout-content')?.textContent.trim();
+      const lineIndex = lines.findIndex(line => line.includes(calloutContent));
+      return lineIndex >= sectionStart && lineIndex <= sectionEnd;
+    });
+  }
+
+  /**
+   * Get the closest callout DOM element to the cursor position
+   * 
+   * @param {number} cursorLine - The line number where the cursor is located
+   * @param {Array<string>} lines - All lines in the document
+   * @returns {HTMLElement|null} The closest callout DOM element or null
+   */
+  getClosestCalloutToCursor(cursorLine, lines) {
+    const calloutElements = this.getAllCalloutElements();
+    if (!calloutElements.length) return null;
+
+    let closestElement = null;
+    let closestDistance = Infinity;
+
+    calloutElements.forEach((element, index) => {
+      // Find the line number of the callout by matching its content with the lines
+      const calloutContent = element.querySelector('.callout-content')?.textContent.trim();
+      const lineIndex = lines.findIndex(line => line.includes(calloutContent));
+
+      if (lineIndex !== -1) {
+        const distance = Math.abs(lineIndex - cursorLine);
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestElement = element;
+        }
+      }
+    });
+
+    return closestElement;
   }
 }
 
@@ -844,32 +823,12 @@ module.exports = class CalloutControlPlugin extends Plugin {
         domService.applyToAllCallouts(newState);
       }
     } else if (scope === 'current') {
-      // Find the callout containing the cursor
-      const calloutElements = domService.getAllCalloutElements();
-      if (!calloutElements.length) return;
-      
-      // For visual operations, just use the DOM elements
-      // Find the callout that contains the cursor or is closest
-      const markdownCallout = markdownService.findCalloutContainingLine(cursor.line) || 
-                            markdownService.findCalloutAboveCursor(cursor.line);
-      if (!markdownCallout) return;
-      
-      // Go through callout elements to find one that matches (approximately)
-      // This is a simplified approach without the sync service mapping
-      let targetElement = null;
-      
-      calloutElements.forEach(element => {
-        const titleElement = element.querySelector('.callout-title-inner');
-        if (titleElement && titleElement.textContent.trim() === markdownCallout.title) {
-          targetElement = element;
-        }
-      });
-      
-      if (!targetElement && calloutElements.length > 0) {
-        // Fallback: just use the first callout if we can't find a match
-        targetElement = calloutElements[0];
-      }
-      
+      const cursorLine = editor.getCursor().line;
+      const lines = editor.getValue().split('\n');
+
+      // Use DOMCalloutService to find the closest callout to the cursor
+      const targetElement = domService.getClosestCalloutToCursor(cursorLine, lines);
+
       if (targetElement) {
         let newState;
         if (mode === 'collapse') {
@@ -879,59 +838,31 @@ module.exports = class CalloutControlPlugin extends Plugin {
         } else { // toggle
           newState = !targetElement.classList.contains('is-collapsed');
         }
-        
+
+        // Apply the new state to the closest callout
         domService.applyCalloutCollapseState(targetElement, newState);
       }
     } else if (scope === 'section') {
-      // Get all callouts in the current section
-      const sectionCallouts = markdownService.getCalloutsInCurrentSection(cursor.line);
-      if (!sectionCallouts.length) return;
-      
-      // Visual-only operation - find matching DOM elements
-      const calloutElements = domService.getAllCalloutElements();
-      const matchingElements = [];
-      
-      // Match section callouts with DOM elements (simplified approach)
-      calloutElements.forEach(element => {
-        const titleElement = element.querySelector('.callout-title-inner');
-        if (titleElement) {
-          const title = titleElement.textContent.trim();
-          if (sectionCallouts.some(callout => callout.title === title)) {
-            matchingElements.push(element);
-          }
-        }
-      });
-      
+      const cursorLine = editor.getCursor().line;
+      const lines = editor.getValue().split('\n');
+
+      // Use DOMCalloutService to find all callouts in the current section
+      const matchingElements = domService.getCalloutsInCurrentSection(cursorLine, lines);
+
       if (matchingElements.length) {
-        // Determine new state based on mode
         if (mode === 'collapse') {
-          // All section callouts get collapsed
-          matchingElements.forEach(element => {
-            domService.applyCalloutCollapseState(element, true);
-          });
+          matchingElements.forEach(element => domService.applyCalloutCollapseState(element, true));
         } else if (mode === 'expand') {
-          // All section callouts get expanded
-          matchingElements.forEach(element => {
-            domService.applyCalloutCollapseState(element, false);
-          });
+          matchingElements.forEach(element => domService.applyCalloutCollapseState(element, false));
         } else if (mode === 'toggle-individual') {
-          // Each section callout gets toggled individually
           matchingElements.forEach(element => {
             const currentState = element.classList.contains('is-collapsed');
             domService.applyCalloutCollapseState(element, !currentState);
           });
         } else { // uniform toggle
-          // Count current collapsed elements to determine majority
-          const collapsedCount = matchingElements.filter(element => 
-            element.classList.contains('is-collapsed')
-          ).length;
-          
+          const collapsedCount = matchingElements.filter(element => element.classList.contains('is-collapsed')).length;
           const newState = collapsedCount < matchingElements.length / 2;
-          
-          // Apply to all matching elements
-          matchingElements.forEach(element => {
-            domService.applyCalloutCollapseState(element, newState);
-          });
+          matchingElements.forEach(element => domService.applyCalloutCollapseState(element, newState));
         }
       }
     }
