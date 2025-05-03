@@ -491,17 +491,18 @@ class CalloutControlSettingsTab extends PluginSettingTab {
       };
     }
 
-    // Create settings sections
-    containerEl.createEl('h2', { text: 'Callout Control Settings' });
-    containerEl.createEl('p', { text: 'Toggle which commands are available in the command palette.' });
+    // Add settings header and brief description
+    const heading = containerEl.createEl('h3', { text: 'Available Commands' });
+    const description = document.createElement('div');
+    description.textContent = 'Enable or disable specific commands shown in the command palette.';
+    description.style.marginBottom = '1em';
+    heading.insertAdjacentElement('afterend', description);
 
-    // Individual command toggles
-    containerEl.createEl('h3', { text: 'Command Settings' });
-
+    // Render grouped command toggles
     // --- Current Group ---
     const currentSection = containerEl.createDiv({ cls: 'callout-control-group' });
     currentSection.createEl('h3', { text: 'Current' });
-    // Current Callout group toggle
+    // Toggle to enable/disable all current callout commands
     new Setting(currentSection)
       .setName('Enable Current Commands')
       .setDesc('Toggle all commands that affect the current callout')
@@ -529,6 +530,7 @@ class CalloutControlSettingsTab extends PluginSettingTab {
     // --- Section Group ---
     const sectionSection = containerEl.createDiv({ cls: 'callout-control-group' });
     sectionSection.createEl('h3', { text: 'Section' });
+    // Toggle to enable/disable all section callout commands
     new Setting(sectionSection)
       .setName('Enable Section Commands')
       .setDesc('Toggle all commands that affect callouts in the current section')
@@ -558,6 +560,7 @@ class CalloutControlSettingsTab extends PluginSettingTab {
     // --- All Group ---
     const allSection = containerEl.createDiv({ cls: 'callout-control-group' });
     allSection.createEl('h3', { text: 'All' });
+    // Toggle to enable/disable all document-wide callout commands
     new Setting(allSection)
       .setName('Enable All Commands')
       .setDesc('Toggle all commands that affect all callouts in the document')
