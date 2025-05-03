@@ -74,7 +74,7 @@ For a more efficient workflow, consider assigning keyboard shortcuts to the comm
 
 Choose hotkeys that feel intuitive to you and don't conflict with other commands you use regularly. Consider which callout operations you perform most often in your workflow and prioritize those for hotkey assignments.
 
-> **Note:** Only commands that are enabled in the settings panel will appear in the hotkeys list. If you don't see a command you want to assign a hotkey to, make sure it's enabled in **Settings → Community Plugins → Callout Control → Settings**.
+> **Note:** Only commands that are enabled in the settings panel will appear in the hotkeys list. If you don't see a command you want to assign a hotkey to, make sure it's enabled in **Settings → Community Plugins → Callout Control → Settings**. See the [Configuration](#-configuration) section below for details on how to enable/disable specific commands and understand the command grouping structure (Current/Section/All).
 
 ### Using With Custom Callouts
 
@@ -157,6 +157,8 @@ The settings panel organizes commands into three main groups:
 
 Each group has toggles for both Visual and Markdown commands, allowing you to customize exactly which commands appear in your Command Palette.
 
+> **Note for Hotkey Users:** Commands that are disabled in the settings panel will not appear in the Command Palette or in the hotkeys list. When setting up hotkeys (see [Setting Up Hotkeys](#setting-up-hotkeys) above), ensure the commands you want to use are enabled here first.
+
 ## ❓ FAQ
 
 ### How does "Section" mode work?
@@ -183,7 +185,11 @@ The plugin works with nested callouts by operating on the parent callout only. W
    - Due to Obsidian's virtual scrolling, off-screen callouts must be scrolled into view
    - Use Markdown-updating commands to affect all callouts regardless of scroll position
 
-3. **Plugin conflicts**
+3. **Commands not appearing in Command Palette or Hotkeys**
+   - Check that the commands are enabled in the [Configuration](#-configuration) settings panel
+   - Try reloading Obsidian if settings changes don't take effect immediately
+
+4. **Plugin conflicts**
    - If you experience issues, try disabling other callout-related plugins temporarily
 
 ## ✅ Compatibility
