@@ -258,6 +258,48 @@ class CalloutMarkdownService {
       callout.endLine <= sectionEnd
     );
   }
+    
+  /**
+   * Get the closest callout to the cursor position
+   * 
+   * @param {number} cursorLine - The current cursor line
+   * @returns {CalloutInfo|null} The closest callout or null
+   */
+  getClosestCalloutToCursor(cursorLine) {
+    const containingCallout = this.findCalloutContainingLine(cursorLine);
+    if (containingCallout) return containingCallout;
+    
+    const allCallouts = this.detectAllCallouts();
+    if (!allCallouts.length) return null;
+    
+    return allCallouts.sort((a, b) => {
+      const distA = Math.abs(a.startLine - cursorLine);
+      const distB = Math.abs(b.startLine - cursorLine);
+      return distA - distB;
+    })[0];
+  }
+  
+  /**
+   * Scan upward from cursor to find the closest callout
+   * 
+   * @param {number} cursorLine - The current cursor line
+   * @returns {CalloutInfo|null} The closest callout above or null
+   */
+  findCalloutAboveCursor(cursorLine) {
+    if (!this.editor) return null;
+    
+    const lines = this.editor.getValue().split('\n');
+    let lineIndex = cursorLine;
+    
+    while (lineIndex >= 0) {
+      if (this.isCalloutStartLine(lines[lineIndex])) {
+        return this.processCallout(lines, lineIndex);
+      }
+      lineIndex--;
+    }
+    
+    return null;
+  }
 }
 
 /**
@@ -662,7 +704,7 @@ module.exports = class CalloutControlPlugin extends Plugin {
   // Register all available commands based on settings
   registerAvailableCommands() {
     // Current Callout (Visual Only)
-    this.registerCommand('toggle-current-visual', 'Toggle Current Callout (Visual Only)', () => this.toggleCurrentCallout());
+    this.registerCommand('toggle-current-visual', 'Toggle Current Callout (Visual Only)', () => this.toggleCurrentCallout('toggle'));
     this.registerCommand('collapse-current-visual', 'Collapse Current Callout (Visual Only)', () => this.toggleCurrentCallout('collapse'));
     this.registerCommand('expand-current-visual', 'Expand Current Callout (Visual Only)', () => this.toggleCurrentCallout('expand'));
 
@@ -678,10 +720,10 @@ module.exports = class CalloutControlPlugin extends Plugin {
     this.registerCommand('flip-section-visual', 'Flip Section Callouts Individually (Visual Only)', () => this.toggleSectionCallouts('toggle-individual'));
 
     // Section Callouts (Markdown)
-    this.registerCommand('toggle-section-markdown', 'Toggle Section Callouts Uniformly (Markdown)', () => this.toggleSectionCallouts());
-    this.registerCommand('collapse-section-markdown', 'Collapse Section Callouts (Markdown)', () => this.toggleSectionCallouts('collapse'));
-    this.registerCommand('expand-section-markdown', 'Expand Section Callouts (Markdown)', () => this.toggleSectionCallouts('expand'));
-    this.registerCommand('flip-section-markdown', 'Flip Section Callouts Individually (Markdown)', () => this.toggleSectionCallouts('toggle-individual'));
+    this.registerCommand('toggle-section-markdown', 'Toggle Section Callouts Uniformly (Markdown)', () => this.toggleSectionCallouts('toggle', true));
+    this.registerCommand('collapse-section-markdown', 'Collapse Section Callouts (Markdown)', () => this.toggleSectionCallouts('collapse', true));
+    this.registerCommand('expand-section-markdown', 'Expand Section Callouts (Markdown)', () => this.toggleSectionCallouts('expand', true));
+    this.registerCommand('flip-section-markdown', 'Flip Section Callouts Individually (Markdown)', () => this.toggleSectionCallouts('toggle-individual', true));
 
     // All Callouts (Visual Only)
     this.registerCommand('toggle-all-visual', 'Toggle All Callouts Uniformly (Visual Only)', () => this.processCallouts('toggle'));
@@ -894,7 +936,7 @@ module.exports = class CalloutControlPlugin extends Plugin {
    * @param {string} mode - 'toggle', 'collapse', or 'expand', or 'toggle-individual'
    * @param {boolean} modifyMarkdown - Whether to update the Markdown
    */
-  toggleSectionCallouts(mode = 'toggle', modifyMarkdown = true) {
+  toggleSectionCallouts(mode = 'toggle', modifyMarkdown = false) {
     this.applyCalloutOperation('section', mode, modifyMarkdown);
   }
 };
