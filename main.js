@@ -467,20 +467,6 @@ class EditorModeService {
   constructor(app) {
     this.app = app;
   }
-
-  /**
-   * Detect if the editor is in Markdown source mode rather than Live Preview
-   * 
-   * @returns {boolean} True if in Markdown mode
-   */
-  isInMarkdownMode() {
-    // Get the current view mode
-    const view = this.app.workspace.activeLeaf?.view;
-    if (!view) return false;
-    
-    // Check if the view has a sourceMode property that's true
-    return view.getMode() === 'source';
-  }
 }
 
 /**
@@ -722,15 +708,11 @@ module.exports = class CalloutControlPlugin extends Plugin {
     
     const { 
       editor, 
-      modeService, 
       markdownService,
       domService
     } = services;
     
     const cursor = editor.getCursor();
-    
-    // Check if we're in markdown mode
-    const inMarkdownMode = modeService.isInMarkdownMode();
     
     // If we're modifying markdown (for "with markdown" commands)
     if (modifyMarkdown) {
