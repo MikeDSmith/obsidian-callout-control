@@ -90,10 +90,38 @@ This plugin works with both standard Obsidian callouts and any custom callouts y
 
 Callout Control provides commands that affect callouts at different scopes, with options for both visual-only changes and Markdown updates.
 
-### Command Types
+### Available Commands
 
-- **Visual-only commands**: Change the appearance without updating the Markdown
-- **Markdown commands**: Update the `+`/`-` markers in your document and change the appearance
+The following commands are available in the plugin:
+
+#### Current Callout (Markdown)
+- **Toggle Current**: Toggle the collapse state of the current callout.
+- **Collapse Current**: Collapse the current callout.
+- **Expand Current**: Expand the current callout.
+
+#### Section Callouts (Markdown)
+- **Toggle Section**: Toggle the collapse state of all callouts in the current section.
+- **Collapse Section**: Collapse all callouts in the current section.
+- **Expand Section**: Expand all callouts in the current section.
+- **Flip Section**: Toggle the collapse state of each callout individually in the current section.
+
+#### All Callouts (Markdown)
+- **Toggle All**: Toggle the collapse state of all callouts in the document.
+- **Collapse All**: Collapse all callouts in the document.
+- **Expand All**: Expand all callouts in the document.
+- **Flip All**: Toggle the collapse state of each callout individually in the document.
+
+#### Section Callouts (Visual Only)
+- **Toggle Section (Visual)**: Toggle the collapse state of all callouts in the current section (visual mode only).
+- **Collapse Section (Visual)**: Collapse all callouts in the current section (visual mode only).
+- **Expand Section (Visual)**: Expand all callouts in the current section (visual mode only).
+- **Flip Section (Visual)**: Toggle the collapse state of each callout individually in the current section (visual mode only).
+
+#### All Callouts (Visual Only)
+- **Toggle All (Visual)**: Toggle the collapse state of all callouts in the document (visual mode only).
+- **Collapse All (Visual)**: Collapse all callouts in the document (visual mode only).
+- **Expand All (Visual)**: Expand all callouts in the document (visual mode only).
+- **Flip All (Visual)**: Toggle the collapse state of each callout individually in the document (visual mode only).
 
 ### Command Actions
 
@@ -101,30 +129,23 @@ Callout Control provides commands that affect callouts at different scopes, with
 - **Collapse/Expand**: Sets all affected callouts to collapsed or expanded state
 - **Flip Individually**: Toggles each callout to its opposite state (expanded becomes collapsed, and vice versa)
 
-### Available Commands
-
-| Scope   | Action   | Visual Only Command                          | Markdown Command                             |
-|---------|----------|----------------------------------------------|---------------------------------------------|
-| All     | Toggle   | Toggle All Callouts Uniformly (Visual Only)  | Toggle All Callouts Uniformly (Markdown)    |
-| All     | Collapse | Collapse All Callouts (Visual Only)          | Collapse All Callouts (Markdown)            |
-| All     | Expand   | Expand All Callouts (Visual Only)            | Expand All Callouts (Markdown)              |
-| All     | Flip     | Flip All Callouts Individually (Visual Only) | Flip All Callouts Individually (Markdown)   |
-| Current | Toggle   | Toggle Current Callout (Visual Only)         | Toggle Current Callout (Markdown)           |
-| Current | Collapse | Collapse Current Callout (Visual Only)       | Collapse Current Callout (Markdown)         |
-| Current | Expand   | Expand Current Callout (Visual Only)         | Expand Current Callout (Markdown)           |
-| Section | Toggle   | Toggle Section Callouts Uniformly (Visual Only) | Toggle Section Callouts Uniformly (Markdown) |
-| Section | Collapse | Collapse Section Callouts (Visual Only)      | Collapse Section Callouts (Markdown)        |
-| Section | Expand   | Expand Section Callouts (Visual Only)        | Expand Section Callouts (Markdown)          |
-| Section | Flip     | Flip Section Callouts Individually (Visual Only) | Flip Section Callouts Individually (Markdown) |
-
 ## 🔄 Toggle Behavior
 
-| Behavior Type | Description                                                   |
-|---------------|---------------------------------------------------------------|
-| **Uniform**   | All affected callouts are set to the same state (used by Toggle, Collapse, and Expand commands) |
-| **Individual** | Each callout toggles based on its current state (`+` or `-`) (used by Flip commands) |
+### Uniform Toggle
+All affected callouts are set to the same state. For example:
+- If the majority of callouts are collapsed, all will be collapsed.
+- If the majority are expanded, all will be expanded.
 
-> **Note on Toggle Behavior:** Toggle commands now apply a uniform state to all affected callouts, meaning all callouts will end up in the same state (all expanded or all collapsed). For individual toggling (where each callout flips to its opposite state), use the new Flip commands.
+This behavior is used by the **Toggle**, **Collapse**, and **Expand** commands.
+
+### Individual Toggle
+Each callout toggles to its opposite state:
+- Collapsed callouts are expanded.
+- Expanded callouts are collapsed.
+
+This behavior is used by the **Flip** commands.
+
+> **Note:** Use **Flip** commands for individual toggling and **Toggle** commands for uniform behavior.
 
 ## 📊 Examples
 

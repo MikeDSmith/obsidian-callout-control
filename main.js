@@ -7,39 +7,39 @@ const CALLOUT_REGEX = /^>\s*\[!([\w-]+)\]([+-]?)\s*(.*)/;
 // Each entry includes:
 // [command ID, display name, scope ('current', 'section', 'all'), mode ('toggle', 'collapse', 'expand', 'toggle-individual'), modifyMarkdown (true/false)]
 const commandsTable = [
-  // Current Callout (Visual Only)
-  ['toggle-current-visual', 'Toggle Current Callout (Visual Only)', 'current', 'toggle', false],
-  ['collapse-current-visual', 'Collapse Current Callout (Visual Only)', 'current', 'collapse', false],
-  ['expand-current-visual', 'Expand Current Callout (Visual Only)', 'current', 'expand', false],
-
   // Current Callout (Markdown)
-  ['toggle-current-markdown', 'Toggle Current Callout (Markdown)', 'current', 'toggle', true],
-  ['collapse-current-markdown', 'Collapse Current Callout (Markdown)', 'current', 'collapse', true],
-  ['expand-current-markdown', 'Expand Current Callout (Markdown)', 'current', 'expand', true],
-
-  // Section Callouts (Visual Only)
-  ['toggle-section-visual', 'Toggle Section Callouts Uniformly (Visual Only)', 'section', 'toggle', false],
-  ['collapse-section-visual', 'Collapse Section Callouts (Visual Only)', 'section', 'collapse', false],
-  ['expand-section-visual', 'Expand Section Callouts (Visual Only)', 'section', 'expand', false],
-  ['flip-section-visual', 'Flip Section Callouts Individually (Visual Only)', 'section', 'toggle-individual', false],
+  ['toggle-current-markdown', 'Toggle Current', 'current', 'toggle', true],
+  ['collapse-current-markdown', 'Collapse Current', 'current', 'collapse', true],
+  ['expand-current-markdown', 'Expand Current', 'current', 'expand', true],
 
   // Section Callouts (Markdown)
-  ['toggle-section-markdown', 'Toggle Section Callouts Uniformly (Markdown)', 'section', 'toggle', true],
-  ['collapse-section-markdown', 'Collapse Section Callouts (Markdown)', 'section', 'collapse', true],
-  ['expand-section-markdown', 'Expand Section Callouts (Markdown)', 'section', 'expand', true],
-  ['flip-section-markdown', 'Flip Section Callouts Individually (Markdown)', 'section', 'toggle-individual', true],
-
-  // All Callouts (Visual Only)
-  ['toggle-all-visual', 'Toggle All Callouts Uniformly (Visual Only)', 'all', 'toggle', false],
-  ['collapse-all-visual', 'Collapse All Callouts (Visual Only)', 'all', 'collapse', false],
-  ['expand-all-visual', 'Expand All Callouts (Visual Only)', 'all', 'expand', false],
-  ['flip-all-visual', 'Flip All Callouts Individually (Visual Only)', 'all', 'toggle-individual', false],
+  ['toggle-section-markdown', 'Toggle Section', 'section', 'toggle', true],
+  ['collapse-section-markdown', 'Collapse Section', 'section', 'collapse', true],
+  ['expand-section-markdown', 'Expand Section', 'section', 'expand', true],
+  ['flip-section-markdown', 'Flip Section', 'section', 'toggle-individual', true],
 
   // All Callouts (Markdown)
-  ['toggle-all-markdown', 'Toggle All Callouts Uniformly (Markdown)', 'all', 'toggle', true],
-  ['collapse-all-markdown', 'Collapse All Callouts (Markdown)', 'all', 'collapse', true],
-  ['expand-all-markdown', 'Expand All Callouts (Markdown)', 'all', 'expand', true],
-  ['flip-all-markdown', 'Flip All Callouts Individually (Markdown)', 'all', 'toggle-individual', true],
+  ['toggle-all-markdown', 'Toggle All', 'all', 'toggle', true],
+  ['collapse-all-markdown', 'Collapse All', 'all', 'collapse', true],
+  ['expand-all-markdown', 'Expand All', 'all', 'expand', true],
+  ['flip-all-markdown', 'Flip All', 'all', 'toggle-individual', true],
+
+  // Current Callout (Visual Only)
+  // ['toggle-current-visual', 'Toggle Current (Visual)', 'current', 'toggle', false],
+  // ['collapse-current-visual', 'Collapse Current (Visual)', 'current', 'collapse', false],
+  // ['expand-current-visual', 'Expand Current (Visual)', 'current', 'expand', false],
+
+  // Section Callouts (Visual Only)
+  ['toggle-section-visual', 'Toggle Section (Visual)', 'section', 'toggle', false],
+  ['collapse-section-visual', 'Collapse Section (Visual)', 'section', 'collapse', false],
+  ['expand-section-visual', 'Expand Section (Visual)', 'section', 'expand', false],
+  ['flip-section-visual', 'Flip Section (Visual)', 'section', 'toggle-individual', false],
+
+  // All Callouts (Visual Only)
+  ['toggle-all-visual', 'Toggle All (Visual)', 'all', 'toggle', false],
+  ['collapse-all-visual', 'Collapse All (Visual)', 'all', 'collapse', false],
+  ['expand-all-visual', 'Expand All (Visual)', 'all', 'expand', false],
+  ['flip-all-visual', 'Flip All (Visual)', 'all', 'toggle-individual', false],
 ];
 
 /**
