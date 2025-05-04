@@ -448,34 +448,6 @@ class EditorModeService {
  * Settings tab for the Callout Control plugin
  */
 class CalloutControlSettingsTab extends PluginSettingTab {
-  // Command groupings for toggles and helpers
-  // eslint-disable-next-line no-unused-vars
-  static COMMAND_GROUPS = {
-    current: [
-      'toggle-current-visual', 'collapse-current-visual', 'expand-current-visual',
-      'toggle-current-markdown', 'collapse-current-markdown',
-      'expand-current-markdown'
-    ],
-    section: [
-      'toggle-section-visual', 'collapse-section-visual', 'expand-section-visual', 'flip-section-visual',
-      'toggle-section-markdown', 'collapse-section-markdown',
-      'expand-section-markdown', 'flip-section-markdown'
-    ],
-    all: [
-      'toggle-all-visual', 'collapse-all-visual', 'expand-all-visual', 'flip-all-visual',
-      'toggle-all-markdown', 'collapse-all-markdown',
-      'expand-all-markdown', 'flip-all-markdown'
-    ]
-  };
-
-  // Helper to get group for a command
-  static getGroupForCommand(commandId) {
-    for (const [group, ids] of Object.entries(CalloutControlSettingsTab.COMMAND_GROUPS)) {
-      if (ids.includes(commandId)) return group;
-    }
-    return null;
-  }
-
   constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;
@@ -519,94 +491,80 @@ class CalloutControlSettingsTab extends PluginSettingTab {
     description.style.marginBottom = '1em';
     heading.insertAdjacentElement('afterend', description);
 
+    // Group commands by scope
+    const groupedCommands = this.groupCommandsByScope();
+
     // Render grouped command toggles
-    // --- Current Group ---
-    const currentSection = containerEl.createDiv({ cls: 'callout-control-group' });
-    currentSection.createEl('h3', { text: 'Current' });
-    // Toggle to enable/disable all current callout commands
-    new Setting(currentSection)
-      .setName('Enable Current Commands')
-      .setDesc('Toggle all commands that affect the current callout')
-      .addToggle(toggle => toggle
-        .setValue(this.plugin.settings.groupsEnabled.current || false)
-        .onChange(async (value) => {
-          this.plugin.settings.groupsEnabled.current = value;
-          CalloutControlSettingsTab.COMMAND_GROUPS.current.forEach(cmdId => {
-            this.plugin.settings.commands[cmdId] = value;
-          });
-          await this.plugin.saveSettings();
-          this.plugin.refreshCommands();
-          this.display();
-        }));
-    currentSection.createEl('h4', { text: 'Visual' });
-    const currentGroupEnabled = this.plugin.settings.groupsEnabled.current !== false;
-    this.createCommandToggle(currentSection, 'toggle-current-visual', 'Toggle Current Callout (Visual Only)', !currentGroupEnabled);
-    this.createCommandToggle(currentSection, 'collapse-current-visual', 'Collapse Current Callout (Visual Only)', !currentGroupEnabled);
-    this.createCommandToggle(currentSection, 'expand-current-visual', 'Expand Current Callout (Visual Only)', !currentGroupEnabled);
-    currentSection.createEl('h4', { text: 'Markdown' });
-    this.createCommandToggle(currentSection, 'toggle-current-markdown', 'Toggle Current Callout (Markdown)', !currentGroupEnabled);
-    this.createCommandToggle(currentSection, 'collapse-current-markdown', 'Collapse Current Callout (Markdown)', !currentGroupEnabled);
-    this.createCommandToggle(currentSection, 'expand-current-markdown', 'Expand Current Callout (Markdown)', !currentGroupEnabled);
+    Object.entries(groupedCommands).forEach(([scope, commands]) => {
+      const section = containerEl.createDiv({ cls: 'callout-control-group' });
+      section.createEl('h3', { text: scope.charAt(0).toUpperCase() + scope.slice(1) });
 
-    // --- Section Group ---
-    const sectionSection = containerEl.createDiv({ cls: 'callout-control-group' });
-    sectionSection.createEl('h3', { text: 'Section' });
-    // Toggle to enable/disable all section callout commands
-    new Setting(sectionSection)
-      .setName('Enable Section Commands')
-      .setDesc('Toggle all commands that affect callouts in the current section')
-      .addToggle(toggle => toggle
-        .setValue(this.plugin.settings.groupsEnabled.section || false)
-        .onChange(async (value) => {
-          this.plugin.settings.groupsEnabled.section = value;
-          CalloutControlSettingsTab.COMMAND_GROUPS.section.forEach(cmdId => {
-            this.plugin.settings.commands[cmdId] = value;
-          });
-          await this.plugin.saveSettings();
-          this.plugin.refreshCommands();
-          this.display();
-        }));
-    sectionSection.createEl('h4', { text: 'Visual' });
-    const sectionGroupEnabled = this.plugin.settings.groupsEnabled.section !== false;
-    this.createCommandToggle(sectionSection, 'toggle-section-visual', 'Toggle Section Callouts Uniformly (Visual Only)', !sectionGroupEnabled);
-    this.createCommandToggle(sectionSection, 'collapse-section-visual', 'Collapse Section Callouts (Visual Only)', !sectionGroupEnabled);
-    this.createCommandToggle(sectionSection, 'expand-section-visual', 'Expand Section Callouts (Visual Only)', !sectionGroupEnabled);
-    this.createCommandToggle(sectionSection, 'flip-section-visual', 'Flip Section Callouts Individually (Visual Only)', !sectionGroupEnabled);
-    sectionSection.createEl('h4', { text: 'Markdown' });
-    this.createCommandToggle(sectionSection, 'toggle-section-markdown', 'Toggle Section Callouts Uniformly (Markdown)', !sectionGroupEnabled);
-    this.createCommandToggle(sectionSection, 'collapse-section-markdown', 'Collapse Section Callouts (Markdown)', !sectionGroupEnabled);
-    this.createCommandToggle(sectionSection, 'expand-section-markdown', 'Expand Section Callouts (Markdown)', !sectionGroupEnabled);
-    this.createCommandToggle(sectionSection, 'flip-section-markdown', 'Flip Section Callouts Individually (Markdown)', !sectionGroupEnabled);
+      // Toggle to enable/disable all commands in the group
+      new Setting(section)
+        .setName(`Enable ${scope.charAt(0).toUpperCase() + scope.slice(1)} Commands`)
+        .setDesc(`Toggle all commands that affect ${scope} callouts`)
+        .addToggle(toggle => toggle
+          .setValue(this.plugin.settings.groupsEnabled[scope] || false)
+          .onChange(async (value) => {
+            this.plugin.settings.groupsEnabled[scope] = value;
+            commands.forEach(cmd => {
+              this.plugin.settings.commands[cmd.id] = value;
+            });
+            await this.plugin.saveSettings();
+            this.plugin.refreshCommands();
+            this.display();
+          }));
 
-    // --- All Group ---
-    const allSection = containerEl.createDiv({ cls: 'callout-control-group' });
-    allSection.createEl('h3', { text: 'All' });
-    // Toggle to enable/disable all document-wide callout commands
-    new Setting(allSection)
-      .setName('Enable All Commands')
-      .setDesc('Toggle all commands that affect all callouts in the document')
-      .addToggle(toggle => toggle
-        .setValue(this.plugin.settings.groupsEnabled.all || false)
-        .onChange(async (value) => {
-          this.plugin.settings.groupsEnabled.all = value;
-          CalloutControlSettingsTab.COMMAND_GROUPS.all.forEach(cmdId => {
-            this.plugin.settings.commands[cmdId] = value;
-          });
-          await this.plugin.saveSettings();
-          this.plugin.refreshCommands();
-          this.display();
-        }));
-    allSection.createEl('h4', { text: 'Visual' });
-    const allGroupEnabled = this.plugin.settings.groupsEnabled.all !== false;
-    this.createCommandToggle(allSection, 'toggle-all-visual', 'Toggle All Callouts Uniformly (Visual Only)', !allGroupEnabled);
-    this.createCommandToggle(allSection, 'collapse-all-visual', 'Collapse All Callouts (Visual Only)', !allGroupEnabled);
-    this.createCommandToggle(allSection, 'expand-all-visual', 'Expand All Callouts (Visual Only)', !allGroupEnabled);
-    this.createCommandToggle(allSection, 'flip-all-visual', 'Flip All Callouts Individually (Visual Only)', !allGroupEnabled);
-    allSection.createEl('h4', { text: 'Markdown' });
-    this.createCommandToggle(allSection, 'toggle-all-markdown', 'Toggle All Callouts Uniformly (Markdown)', !allGroupEnabled);
-    this.createCommandToggle(allSection, 'collapse-all-markdown', 'Collapse All Callouts (Markdown)', !allGroupEnabled);
-    this.createCommandToggle(allSection, 'expand-all-markdown', 'Expand All Callouts (Markdown)', !allGroupEnabled);
-    this.createCommandToggle(allSection, 'flip-all-markdown', 'Flip All Callouts Individually (Markdown)', !allGroupEnabled);
+      // Render individual command toggles
+      commands.forEach(({ id, name }) => {
+        this.createCommandToggle(section, id, name, !this.plugin.settings.groupsEnabled[scope]);
+      });
+    });
+  }
+
+  // Helper to group commands by their scope
+  groupCommandsByScope() {
+    const commandsTable = [
+      // Current Callout (Visual Only)
+      ['toggle-current-visual', 'Toggle Current Callout (Visual Only)', 'current', 'toggle', false],
+      ['collapse-current-visual', 'Collapse Current Callout (Visual Only)', 'current', 'collapse', false],
+      ['expand-current-visual', 'Expand Current Callout (Visual Only)', 'current', 'expand', false],
+
+      // Current Callout (Markdown)
+      ['toggle-current-markdown', 'Toggle Current Callout (Markdown)', 'current', 'toggle', true],
+      ['collapse-current-markdown', 'Collapse Current Callout (Markdown)', 'current', 'collapse', true],
+      ['expand-current-markdown', 'Expand Current Callout (Markdown)', 'current', 'expand', true],
+
+      // Section Callouts (Visual Only)
+      ['toggle-section-visual', 'Toggle Section Callouts Uniformly (Visual Only)', 'section', 'toggle', false],
+      ['collapse-section-visual', 'Collapse Section Callouts (Visual Only)', 'section', 'collapse', false],
+      ['expand-section-visual', 'Expand Section Callouts (Visual Only)', 'section', 'expand', false],
+      ['flip-section-visual', 'Flip Section Callouts Individually (Visual Only)', 'section', 'toggle-individual', false],
+
+      // Section Callouts (Markdown)
+      ['toggle-section-markdown', 'Toggle Section Callouts Uniformly (Markdown)', 'section', 'toggle', true],
+      ['collapse-section-markdown', 'Collapse Section Callouts (Markdown)', 'section', 'collapse', true],
+      ['expand-section-markdown', 'Expand Section Callouts (Markdown)', 'section', 'expand', true],
+      ['flip-section-markdown', 'Flip Section Callouts Individually (Markdown)', 'section', 'toggle-individual', true],
+
+      // All Callouts (Visual Only)
+      ['toggle-all-visual', 'Toggle All Callouts Uniformly (Visual Only)', 'all', 'toggle', false],
+      ['collapse-all-visual', 'Collapse All Callouts (Visual Only)', 'all', 'collapse', false],
+      ['expand-all-visual', 'Expand All Callouts (Visual Only)', 'all', 'expand', false],
+      ['flip-all-visual', 'Flip All Callouts Individually (Visual Only)', 'all', 'toggle-individual', false],
+
+      // All Callouts (Markdown)
+      ['toggle-all-markdown', 'Toggle All Callouts Uniformly (Markdown)', 'all', 'toggle', true],
+      ['collapse-all-markdown', 'Collapse All Callouts (Markdown)', 'all', 'collapse', true],
+      ['expand-all-markdown', 'Expand All Callouts (Markdown)', 'all', 'expand', true],
+      ['flip-all-markdown', 'Flip All Callouts Individually (Markdown)', 'all', 'toggle-individual', true],
+    ];
+
+    return commandsTable.reduce((groups, [id, name, scope]) => {
+      if (!groups[scope]) groups[scope] = [];
+      groups[scope].push({ id, name });
+      return groups;
+    }, {});
   }
 
   // Helper to create a toggle for a specific command
@@ -623,7 +581,7 @@ class CalloutControlSettingsTab extends PluginSettingTab {
           .onChange(async (value) => {
             // If group is disabled but individual command is turned on, activate group
             if (value) {
-              const group = CalloutControlSettingsTab.getGroupForCommand(commandId);
+              const group = this.getGroupForCommand(commandId);
               if (group) this.plugin.settings.groupsEnabled[group] = true;
             }
 
@@ -633,6 +591,48 @@ class CalloutControlSettingsTab extends PluginSettingTab {
             this.display();
           });
       });
+  }
+
+  // Helper to get the group for a command
+  getGroupForCommand(commandId) {
+    const commandsTable = [
+      // Current Callout (Visual Only)
+      ['toggle-current-visual', 'Toggle Current Callout (Visual Only)', 'current', 'toggle', false],
+      ['collapse-current-visual', 'Collapse Current Callout (Visual Only)', 'current', 'collapse', false],
+      ['expand-current-visual', 'Expand Current Callout (Visual Only)', 'current', 'expand', false],
+
+      // Current Callout (Markdown)
+      ['toggle-current-markdown', 'Toggle Current Callout (Markdown)', 'current', 'toggle', true],
+      ['collapse-current-markdown', 'Collapse Current Callout (Markdown)', 'current', 'collapse', true],
+      ['expand-current-markdown', 'Expand Current Callout (Markdown)', 'current', 'expand', true],
+
+      // Section Callouts (Visual Only)
+      ['toggle-section-visual', 'Toggle Section Callouts Uniformly (Visual Only)', 'section', 'toggle', false],
+      ['collapse-section-visual', 'Collapse Section Callouts (Visual Only)', 'section', 'collapse', false],
+      ['expand-section-visual', 'Expand Section Callouts (Visual Only)', 'section', 'expand', false],
+      ['flip-section-visual', 'Flip Section Callouts Individually (Visual Only)', 'section', 'toggle-individual', false],
+
+      // Section Callouts (Markdown)
+      ['toggle-section-markdown', 'Toggle Section Callouts Uniformly (Markdown)', 'section', 'toggle', true],
+      ['collapse-section-markdown', 'Collapse Section Callouts (Markdown)', 'section', 'collapse', true],
+      ['expand-section-markdown', 'Expand Section Callouts (Markdown)', 'section', 'expand', true],
+      ['flip-section-markdown', 'Flip Section Callouts Individually (Markdown)', 'section', 'toggle-individual', true],
+
+      // All Callouts (Visual Only)
+      ['toggle-all-visual', 'Toggle All Callouts Uniformly (Visual Only)', 'all', 'toggle', false],
+      ['collapse-all-visual', 'Collapse All Callouts (Visual Only)', 'all', 'collapse', false],
+      ['expand-all-visual', 'Expand All Callouts (Visual Only)', 'all', 'expand', false],
+      ['flip-all-visual', 'Flip All Callouts Individually (Visual Only)', 'all', 'toggle-individual', false],
+
+      // All Callouts (Markdown)
+      ['toggle-all-markdown', 'Toggle All Callouts Uniformly (Markdown)', 'all', 'toggle', true],
+      ['collapse-all-markdown', 'Collapse All Callouts (Markdown)', 'all', 'collapse', true],
+      ['expand-all-markdown', 'Expand All Callouts (Markdown)', 'all', 'expand', true],
+      ['flip-all-markdown', 'Flip All Callouts Individually (Markdown)', 'all', 'toggle-individual', true],
+    ];
+
+    const command = commandsTable.find(([id]) => id === commandId);
+    return command ? command[2] : null; // Return the scope
   }
 }
 
