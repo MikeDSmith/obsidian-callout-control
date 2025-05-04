@@ -3,6 +3,45 @@ const { Plugin, PluginSettingTab, Setting } = require('obsidian');
 // Regular expression to identify callout patterns in Markdown
 const CALLOUT_REGEX = /^>\s*\[!([\w-]+)\]([+-]?)\s*(.*)/;
 
+// commandsTable defines all available commands for the plugin.
+// Each entry includes:
+// [command ID, display name, scope ('current', 'section', 'all'), mode ('toggle', 'collapse', 'expand', 'toggle-individual'), modifyMarkdown (true/false)]
+const commandsTable = [
+  // Current Callout (Visual Only)
+  ['toggle-current-visual', 'Toggle Current Callout (Visual Only)', 'current', 'toggle', false],
+  ['collapse-current-visual', 'Collapse Current Callout (Visual Only)', 'current', 'collapse', false],
+  ['expand-current-visual', 'Expand Current Callout (Visual Only)', 'current', 'expand', false],
+
+  // Current Callout (Markdown)
+  ['toggle-current-markdown', 'Toggle Current Callout (Markdown)', 'current', 'toggle', true],
+  ['collapse-current-markdown', 'Collapse Current Callout (Markdown)', 'current', 'collapse', true],
+  ['expand-current-markdown', 'Expand Current Callout (Markdown)', 'current', 'expand', true],
+
+  // Section Callouts (Visual Only)
+  ['toggle-section-visual', 'Toggle Section Callouts Uniformly (Visual Only)', 'section', 'toggle', false],
+  ['collapse-section-visual', 'Collapse Section Callouts (Visual Only)', 'section', 'collapse', false],
+  ['expand-section-visual', 'Expand Section Callouts (Visual Only)', 'section', 'expand', false],
+  ['flip-section-visual', 'Flip Section Callouts Individually (Visual Only)', 'section', 'toggle-individual', false],
+
+  // Section Callouts (Markdown)
+  ['toggle-section-markdown', 'Toggle Section Callouts Uniformly (Markdown)', 'section', 'toggle', true],
+  ['collapse-section-markdown', 'Collapse Section Callouts (Markdown)', 'section', 'collapse', true],
+  ['expand-section-markdown', 'Expand Section Callouts (Markdown)', 'section', 'expand', true],
+  ['flip-section-markdown', 'Flip Section Callouts Individually (Markdown)', 'section', 'toggle-individual', true],
+
+  // All Callouts (Visual Only)
+  ['toggle-all-visual', 'Toggle All Callouts Uniformly (Visual Only)', 'all', 'toggle', false],
+  ['collapse-all-visual', 'Collapse All Callouts (Visual Only)', 'all', 'collapse', false],
+  ['expand-all-visual', 'Expand All Callouts (Visual Only)', 'all', 'expand', false],
+  ['flip-all-visual', 'Flip All Callouts Individually (Visual Only)', 'all', 'toggle-individual', false],
+
+  // All Callouts (Markdown)
+  ['toggle-all-markdown', 'Toggle All Callouts Uniformly (Markdown)', 'all', 'toggle', true],
+  ['collapse-all-markdown', 'Collapse All Callouts (Markdown)', 'all', 'collapse', true],
+  ['expand-all-markdown', 'Expand All Callouts (Markdown)', 'all', 'expand', true],
+  ['flip-all-markdown', 'Flip All Callouts Individually (Markdown)', 'all', 'toggle-individual', true],
+];
+
 /**
  * Core CalloutService that handles the Markdown parsing and manipulation
  * This class is responsible for all Markdown-related operations
@@ -524,42 +563,6 @@ class CalloutControlSettingsTab extends PluginSettingTab {
 
   // Helper to group commands by their scope
   groupCommandsByScope() {
-    const commandsTable = [
-      // Current Callout (Visual Only)
-      ['toggle-current-visual', 'Toggle Current Callout (Visual Only)', 'current', 'toggle', false],
-      ['collapse-current-visual', 'Collapse Current Callout (Visual Only)', 'current', 'collapse', false],
-      ['expand-current-visual', 'Expand Current Callout (Visual Only)', 'current', 'expand', false],
-
-      // Current Callout (Markdown)
-      ['toggle-current-markdown', 'Toggle Current Callout (Markdown)', 'current', 'toggle', true],
-      ['collapse-current-markdown', 'Collapse Current Callout (Markdown)', 'current', 'collapse', true],
-      ['expand-current-markdown', 'Expand Current Callout (Markdown)', 'current', 'expand', true],
-
-      // Section Callouts (Visual Only)
-      ['toggle-section-visual', 'Toggle Section Callouts Uniformly (Visual Only)', 'section', 'toggle', false],
-      ['collapse-section-visual', 'Collapse Section Callouts (Visual Only)', 'section', 'collapse', false],
-      ['expand-section-visual', 'Expand Section Callouts (Visual Only)', 'section', 'expand', false],
-      ['flip-section-visual', 'Flip Section Callouts Individually (Visual Only)', 'section', 'toggle-individual', false],
-
-      // Section Callouts (Markdown)
-      ['toggle-section-markdown', 'Toggle Section Callouts Uniformly (Markdown)', 'section', 'toggle', true],
-      ['collapse-section-markdown', 'Collapse Section Callouts (Markdown)', 'section', 'collapse', true],
-      ['expand-section-markdown', 'Expand Section Callouts (Markdown)', 'section', 'expand', true],
-      ['flip-section-markdown', 'Flip Section Callouts Individually (Markdown)', 'section', 'toggle-individual', true],
-
-      // All Callouts (Visual Only)
-      ['toggle-all-visual', 'Toggle All Callouts Uniformly (Visual Only)', 'all', 'toggle', false],
-      ['collapse-all-visual', 'Collapse All Callouts (Visual Only)', 'all', 'collapse', false],
-      ['expand-all-visual', 'Expand All Callouts (Visual Only)', 'all', 'expand', false],
-      ['flip-all-visual', 'Flip All Callouts Individually (Visual Only)', 'all', 'toggle-individual', false],
-
-      // All Callouts (Markdown)
-      ['toggle-all-markdown', 'Toggle All Callouts Uniformly (Markdown)', 'all', 'toggle', true],
-      ['collapse-all-markdown', 'Collapse All Callouts (Markdown)', 'all', 'collapse', true],
-      ['expand-all-markdown', 'Expand All Callouts (Markdown)', 'all', 'expand', true],
-      ['flip-all-markdown', 'Flip All Callouts Individually (Markdown)', 'all', 'toggle-individual', true],
-    ];
-
     return commandsTable.reduce((groups, [id, name, scope]) => {
       if (!groups[scope]) groups[scope] = [];
       groups[scope].push({ id, name });
@@ -595,42 +598,6 @@ class CalloutControlSettingsTab extends PluginSettingTab {
 
   // Helper to get the group for a command
   getGroupForCommand(commandId) {
-    const commandsTable = [
-      // Current Callout (Visual Only)
-      ['toggle-current-visual', 'Toggle Current Callout (Visual Only)', 'current', 'toggle', false],
-      ['collapse-current-visual', 'Collapse Current Callout (Visual Only)', 'current', 'collapse', false],
-      ['expand-current-visual', 'Expand Current Callout (Visual Only)', 'current', 'expand', false],
-
-      // Current Callout (Markdown)
-      ['toggle-current-markdown', 'Toggle Current Callout (Markdown)', 'current', 'toggle', true],
-      ['collapse-current-markdown', 'Collapse Current Callout (Markdown)', 'current', 'collapse', true],
-      ['expand-current-markdown', 'Expand Current Callout (Markdown)', 'current', 'expand', true],
-
-      // Section Callouts (Visual Only)
-      ['toggle-section-visual', 'Toggle Section Callouts Uniformly (Visual Only)', 'section', 'toggle', false],
-      ['collapse-section-visual', 'Collapse Section Callouts (Visual Only)', 'section', 'collapse', false],
-      ['expand-section-visual', 'Expand Section Callouts (Visual Only)', 'section', 'expand', false],
-      ['flip-section-visual', 'Flip Section Callouts Individually (Visual Only)', 'section', 'toggle-individual', false],
-
-      // Section Callouts (Markdown)
-      ['toggle-section-markdown', 'Toggle Section Callouts Uniformly (Markdown)', 'section', 'toggle', true],
-      ['collapse-section-markdown', 'Collapse Section Callouts (Markdown)', 'section', 'collapse', true],
-      ['expand-section-markdown', 'Expand Section Callouts (Markdown)', 'section', 'expand', true],
-      ['flip-section-markdown', 'Flip Section Callouts Individually (Markdown)', 'section', 'toggle-individual', true],
-
-      // All Callouts (Visual Only)
-      ['toggle-all-visual', 'Toggle All Callouts Uniformly (Visual Only)', 'all', 'toggle', false],
-      ['collapse-all-visual', 'Collapse All Callouts (Visual Only)', 'all', 'collapse', false],
-      ['expand-all-visual', 'Expand All Callouts (Visual Only)', 'all', 'expand', false],
-      ['flip-all-visual', 'Flip All Callouts Individually (Visual Only)', 'all', 'toggle-individual', false],
-
-      // All Callouts (Markdown)
-      ['toggle-all-markdown', 'Toggle All Callouts Uniformly (Markdown)', 'all', 'toggle', true],
-      ['collapse-all-markdown', 'Collapse All Callouts (Markdown)', 'all', 'collapse', true],
-      ['expand-all-markdown', 'Expand All Callouts (Markdown)', 'all', 'expand', true],
-      ['flip-all-markdown', 'Flip All Callouts Individually (Markdown)', 'all', 'toggle-individual', true],
-    ];
-
     const command = commandsTable.find(([id]) => id === commandId);
     return command ? command[2] : null; // Return the scope
   }
@@ -703,44 +670,6 @@ module.exports = class CalloutControlPlugin extends Plugin {
   
   // Register all available commands based on settings
   registerAvailableCommands() {
-    // Commands table: Each entry defines a command with the following structure:
-    // [command ID, display name, scope ('current', 'section', 'all'), mode ('toggle', 'collapse', 'expand', 'toggle-individual'), modifyMarkdown (true/false)]
-    const commandsTable = [
-      // Current Callout (Visual Only)
-      ['toggle-current-visual', 'Toggle Current Callout (Visual Only)', 'current', 'toggle', false],
-      ['collapse-current-visual', 'Collapse Current Callout (Visual Only)', 'current', 'collapse', false],
-      ['expand-current-visual', 'Expand Current Callout (Visual Only)', 'current', 'expand', false],
-
-      // Current Callout (Markdown)
-      ['toggle-current-markdown', 'Toggle Current Callout (Markdown)', 'current', 'toggle', true],
-      ['collapse-current-markdown', 'Collapse Current Callout (Markdown)', 'current', 'collapse', true],
-      ['expand-current-markdown', 'Expand Current Callout (Markdown)', 'current', 'expand', true],
-
-      // Section Callouts (Visual Only)
-      ['toggle-section-visual', 'Toggle Section Callouts Uniformly (Visual Only)', 'section', 'toggle', false],
-      ['collapse-section-visual', 'Collapse Section Callouts (Visual Only)', 'section', 'collapse', false],
-      ['expand-section-visual', 'Expand Section Callouts (Visual Only)', 'section', 'expand', false],
-      ['flip-section-visual', 'Flip Section Callouts Individually (Visual Only)', 'section', 'toggle-individual', false],
-
-      // Section Callouts (Markdown)
-      ['toggle-section-markdown', 'Toggle Section Callouts Uniformly (Markdown)', 'section', 'toggle', true],
-      ['collapse-section-markdown', 'Collapse Section Callouts (Markdown)', 'section', 'collapse', true],
-      ['expand-section-markdown', 'Expand Section Callouts (Markdown)', 'section', 'expand', true],
-      ['flip-section-markdown', 'Flip Section Callouts Individually (Markdown)', 'section', 'toggle-individual', true],
-
-      // All Callouts (Visual Only)
-      ['toggle-all-visual', 'Toggle All Callouts Uniformly (Visual Only)', 'all', 'toggle', false],
-      ['collapse-all-visual', 'Collapse All Callouts (Visual Only)', 'all', 'collapse', false],
-      ['expand-all-visual', 'Expand All Callouts (Visual Only)', 'all', 'expand', false],
-      ['flip-all-visual', 'Flip All Callouts Individually (Visual Only)', 'all', 'toggle-individual', false],
-
-      // All Callouts (Markdown)
-      ['toggle-all-markdown', 'Toggle All Callouts Uniformly (Markdown)', 'all', 'toggle', true],
-      ['collapse-all-markdown', 'Collapse All Callouts (Markdown)', 'all', 'collapse', true],
-      ['expand-all-markdown', 'Expand All Callouts (Markdown)', 'all', 'expand', true],
-      ['flip-all-markdown', 'Flip All Callouts Individually (Markdown)', 'all', 'toggle-individual', true],
-    ];
-
     commandsTable.forEach(([id, name, scope, mode, modifyMarkdown]) => {
       this.registerCommand(id, name, () => this.applyCalloutOperation(scope, mode, modifyMarkdown));
     });
