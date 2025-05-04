@@ -703,39 +703,47 @@ module.exports = class CalloutControlPlugin extends Plugin {
   
   // Register all available commands based on settings
   registerAvailableCommands() {
-    // Current Callout (Visual Only)
-    this.registerCommand('toggle-current-visual', 'Toggle Current Callout (Visual Only)', () => this.applyCalloutOperation('current', 'toggle', false));
-    this.registerCommand('collapse-current-visual', 'Collapse Current Callout (Visual Only)', () => this.applyCalloutOperation('current', 'collapse', false));
-    this.registerCommand('expand-current-visual', 'Expand Current Callout (Visual Only)', () => this.applyCalloutOperation('current', 'expand', false));
+    // Commands table: Each entry defines a command with the following structure:
+    // [command ID, display name, scope ('current', 'section', 'all'), mode ('toggle', 'collapse', 'expand', 'toggle-individual'), modifyMarkdown (true/false)]
+    const commandsTable = [
+      // Current Callout (Visual Only)
+      ['toggle-current-visual', 'Toggle Current Callout (Visual Only)', 'current', 'toggle', false],
+      ['collapse-current-visual', 'Collapse Current Callout (Visual Only)', 'current', 'collapse', false],
+      ['expand-current-visual', 'Expand Current Callout (Visual Only)', 'current', 'expand', false],
 
-    // Current Callout (Markdown)
-    this.registerCommand('toggle-current-markdown', 'Toggle Current Callout (Markdown)', () => this.applyCalloutOperation('current', 'toggle', true));
-    this.registerCommand('collapse-current-markdown', 'Collapse Current Callout (Markdown)', () => this.applyCalloutOperation('current', 'collapse', true));
-    this.registerCommand('expand-current-markdown', 'Expand Current Callout (Markdown)', () => this.applyCalloutOperation('current', 'expand', true));
+      // Current Callout (Markdown)
+      ['toggle-current-markdown', 'Toggle Current Callout (Markdown)', 'current', 'toggle', true],
+      ['collapse-current-markdown', 'Collapse Current Callout (Markdown)', 'current', 'collapse', true],
+      ['expand-current-markdown', 'Expand Current Callout (Markdown)', 'current', 'expand', true],
 
-    // Section Callouts (Visual Only)
-    this.registerCommand('toggle-section-visual', 'Toggle Section Callouts Uniformly (Visual Only)', () => this.applyCalloutOperation('section', 'toggle', false));
-    this.registerCommand('collapse-section-visual', 'Collapse Section Callouts (Visual Only)', () => this.applyCalloutOperation('section', 'collapse', false));
-    this.registerCommand('expand-section-visual', 'Expand Section Callouts (Visual Only)', () => this.applyCalloutOperation('section', 'expand', false));
-    this.registerCommand('flip-section-visual', 'Flip Section Callouts Individually (Visual Only)', () => this.applyCalloutOperation('section', 'toggle-individual'), false);
+      // Section Callouts (Visual Only)
+      ['toggle-section-visual', 'Toggle Section Callouts Uniformly (Visual Only)', 'section', 'toggle', false],
+      ['collapse-section-visual', 'Collapse Section Callouts (Visual Only)', 'section', 'collapse', false],
+      ['expand-section-visual', 'Expand Section Callouts (Visual Only)', 'section', 'expand', false],
+      ['flip-section-visual', 'Flip Section Callouts Individually (Visual Only)', 'section', 'toggle-individual', false],
 
-    // Section Callouts (Markdown)
-    this.registerCommand('toggle-section-markdown', 'Toggle Section Callouts Uniformly (Markdown)', () => this.applyCalloutOperation('section', 'toggle', true));
-    this.registerCommand('collapse-section-markdown', 'Collapse Section Callouts (Markdown)', () => this.applyCalloutOperation('section', 'collapse', true));
-    this.registerCommand('expand-section-markdown', 'Expand Section Callouts (Markdown)', () => this.applyCalloutOperation('section', 'expand', true));
-    this.registerCommand('flip-section-markdown', 'Flip Section Callouts Individually (Markdown)', () => this.applyCalloutOperation('section', 'toggle-individual', true));
+      // Section Callouts (Markdown)
+      ['toggle-section-markdown', 'Toggle Section Callouts Uniformly (Markdown)', 'section', 'toggle', true],
+      ['collapse-section-markdown', 'Collapse Section Callouts (Markdown)', 'section', 'collapse', true],
+      ['expand-section-markdown', 'Expand Section Callouts (Markdown)', 'section', 'expand', true],
+      ['flip-section-markdown', 'Flip Section Callouts Individually (Markdown)', 'section', 'toggle-individual', true],
 
-    // All Callouts (Visual Only)
-    this.registerCommand('toggle-all-visual', 'Toggle All Callouts Uniformly (Visual Only)', () => this.applyCalloutOperation('all', 'toggle', false));
-    this.registerCommand('collapse-all-visual', 'Collapse All Callouts (Visual Only)', () => this.applyCalloutOperation('all', 'collapse', false));
-    this.registerCommand('expand-all-visual', 'Expand All Callouts (Visual Only)', () => this.applyCalloutOperation('all', 'expand', false));
-    this.registerCommand('flip-all-visual', 'Flip All Callouts Individually (Visual Only)', () => this.applyCalloutOperation('all', 'toggle-individual', false));
+      // All Callouts (Visual Only)
+      ['toggle-all-visual', 'Toggle All Callouts Uniformly (Visual Only)', 'all', 'toggle', false],
+      ['collapse-all-visual', 'Collapse All Callouts (Visual Only)', 'all', 'collapse', false],
+      ['expand-all-visual', 'Expand All Callouts (Visual Only)', 'all', 'expand', false],
+      ['flip-all-visual', 'Flip All Callouts Individually (Visual Only)', 'all', 'toggle-individual', false],
 
-    // All Callouts (Markdown)
-    this.registerCommand('toggle-all-markdown', 'Toggle All Callouts Uniformly (Markdown)', () => this.applyCalloutOperation('all', 'toggle', true));
-    this.registerCommand('collapse-all-markdown', 'Collapse All Callouts (Markdown)', () => this.applyCalloutOperation('all', 'collapse', true));
-    this.registerCommand('expand-all-markdown', 'Expand All Callouts (Markdown)', () => this.applyCalloutOperation('all', 'expand', true));
-    this.registerCommand('flip-all-markdown', 'Flip All Callouts Individually (Markdown)', () => this.applyCalloutOperation('all', 'toggle-individual', true));
+      // All Callouts (Markdown)
+      ['toggle-all-markdown', 'Toggle All Callouts Uniformly (Markdown)', 'all', 'toggle', true],
+      ['collapse-all-markdown', 'Collapse All Callouts (Markdown)', 'all', 'collapse', true],
+      ['expand-all-markdown', 'Expand All Callouts (Markdown)', 'all', 'expand', true],
+      ['flip-all-markdown', 'Flip All Callouts Individually (Markdown)', 'all', 'toggle-individual', true],
+    ];
+
+    commandsTable.forEach(([id, name, scope, mode, modifyMarkdown]) => {
+      this.registerCommand(id, name, () => this.applyCalloutOperation(scope, mode, modifyMarkdown));
+    });
   }
   
   // Refresh commands based on updated settings
