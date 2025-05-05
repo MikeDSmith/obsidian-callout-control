@@ -18,7 +18,10 @@
     "toggle-all-visual": true,
     "collapse-all-visual": true,
     "expand-all-visual": true,
-    "flip-all-visual": true
+    "flip-all-visual": true,
+    "toggle-current-visual": true,
+    "collapse-current-visual": true,
+    "expand-current-visual": true
   },
   "groupsEnabled": {
     "all": true,
