@@ -45,6 +45,11 @@
   - Visual mode changes appearance without modifying your document
   - Markdown mode syncs the visual state by updating `+`/`-` markers in your document
 
+- **Smart callout identification for visual commands:**
+  - Reliably identifies the correct callout even when multiple callouts have identical text
+  - Uses precise position tracking to target the intended callout
+  - Shows helpful notifications when no callouts are found
+
 > **Note:** Visual commands affect only callouts currently rendered on screen due to Obsidian's virtual scrolling. Markdown commands work regardless of scroll position.
 
 ## 🔌 Installation
@@ -122,6 +127,11 @@ The following commands are available in the plugin:
 - **Expand All**: Expand all callouts in the document.
 - **Flip All**: Toggle the collapse state of each callout individually in the document.
 
+#### Current Callout (Visual Only)
+- **Toggle Current (Visual)**: Toggle the collapse state of the current callout (visual mode only).
+- **Collapse Current (Visual)**: Collapse the current callout (visual mode only).
+- **Expand Current (Visual)**: Expand the current callout (visual mode only).
+
 #### Section Callouts (Visual Only)
 - **Toggle Section (Visual)**: Toggle the collapse state of all callouts in the current section (visual mode only).
 - **Collapse Section (Visual)**: Collapse all callouts in the current section (visual mode only).
@@ -138,8 +148,8 @@ The following commands are available in the plugin:
 
 ### Uniform Toggle
 All affected callouts are set to the same state. For example:
-- If the majority of callouts are collapsed, all will be collapsed.
-- If the majority are expanded, all will be expanded.
+- If the majority of callouts are collapsed, all will be expanded.
+- If the majority are expanded, all will be collapsed.
 
 This behavior is used by the **Toggle**, **Collapse**, and **Expand** commands.
 
@@ -214,7 +224,12 @@ The plugin works with nested callouts by operating on the parent callout only. W
    - Check that the commands are enabled in the [Configuration](#-configuration) settings panel
    - Try reloading Obsidian if settings changes don't take effect immediately
 
-4. **Plugin conflicts**
+4. **Multiple callouts with identical text**
+   - The plugin's visual commands can now correctly identify callouts even when they have identical text
+   - For best results, place your cursor near the specific callout you want to target
+   - Note that markdown commands always worked correctly with identical callouts since they operate based on line numbers
+
+5. **Plugin conflicts**
    - If you experience issues, try disabling other callout-related plugins temporarily
 
 ## ✅ Compatibility

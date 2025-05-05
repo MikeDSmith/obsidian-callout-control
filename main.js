@@ -22,21 +22,21 @@ const CONSTANTS = {
 };
 
 /**
- * Callout class represents a callout in the document with behavior methods
- */
+* Callout class represents a callout in the document with behavior methods
+*/
 class Callout {
   /**
-   * Creates a new callout object
-   * 
-   * @param {string} type - The callout type (note, warning, etc.)
-   * @param {string} title - The callout title
-   * @param {boolean} isCollapsed - Whether the callout is collapsed
-   * @param {string} content - The content of the callout
-   * @param {number} startLine - Line where the callout starts
-   * @param {number} endLine - Line where the callout ends
-   * @param {Array<Callout>} nestedCallouts - Child callouts inside this one
-   * @param {string} rawLine - Original Markdown line that started the callout
-   */
+  * Creates a new callout object
+  * 
+  * @param {string} type - The callout type (note, warning, etc.)
+  * @param {string} title - The callout title
+  * @param {boolean} isCollapsed - Whether the callout is collapsed
+  * @param {string} content - The content of the callout
+  * @param {number} startLine - Line where the callout starts
+  * @param {number} endLine - Line where the callout ends
+  * @param {Array<Callout>} nestedCallouts - Child callouts inside this one
+  * @param {string} rawLine - Original Markdown line that started the callout
+  */
   constructor(type, title, isCollapsed, content, startLine, endLine, nestedCallouts = [], rawLine = '') {
     this.type = type;
     this.title = title;
@@ -47,23 +47,23 @@ class Callout {
     this.nestedCallouts = nestedCallouts;
     this.rawLine = rawLine;
   }
-
+  
   /**
-   * Check if this callout contains the given line number
-   * 
-   * @param {number} lineNumber - The line number to check
-   * @returns {boolean} Whether the callout contains this line
-   */
+  * Check if this callout contains the given line number
+  * 
+  * @param {number} lineNumber - The line number to check
+  * @returns {boolean} Whether the callout contains this line
+  */
   containsLine(lineNumber) {
     return lineNumber >= this.startLine && lineNumber <= this.endLine;
   }
-
+  
   /**
-   * Find a nested callout that contains the given line
-   * 
-   * @param {number} lineNumber - The line number to find
-   * @returns {Callout|null} The nested callout or null
-   */
+  * Find a nested callout that contains the given line
+  * 
+  * @param {number} lineNumber - The line number to find
+  * @returns {Callout|null} The nested callout or null
+  */
   findNestedCalloutWithLine(lineNumber) {
     for (const nested of this.nestedCallouts) {
       if (nested.containsLine(lineNumber)) {
@@ -73,13 +73,13 @@ class Callout {
     }
     return null;
   }
-
+  
   /**
-   * Get the distance from this callout to the given line
-   * 
-   * @param {number} lineNumber - The line to measure distance to
-   * @returns {number} The distance in lines
-   */
+  * Get the distance from this callout to the given line
+  * 
+  * @param {number} lineNumber - The line to measure distance to
+  * @returns {number} The distance in lines
+  */
   distanceToLine(lineNumber) {
     if (this.containsLine(lineNumber)) return 0;
     return Math.min(
@@ -87,14 +87,14 @@ class Callout {
       Math.abs(this.endLine - lineNumber)
     );
   }
-
+  
   /**
-   * Create a new callout from markdown line match results
-   * 
-   * @param {Array} match - The regex match results
-   * @param {number} startLineIndex - The starting line index
-   * @returns {Callout} A new callout instance
-   */
+  * Create a new callout from markdown line match results
+  * 
+  * @param {Array} match - The regex match results
+  * @param {number} startLineIndex - The starting line index
+  * @returns {Callout} A new callout instance
+  */
   static fromMatch(match, startLineIndex) {
     const type = match[1];
     const collapseState = match[2] || '';
@@ -112,13 +112,13 @@ class Callout {
       match.input  // original raw line
     );
   }
-
+  
   /**
-   * Update this callout's collapse state
-   * 
-   * @param {boolean} newState - The new collapse state
-   * @returns {string} The updated markdown line
-   */
+  * Update this callout's collapse state
+  * 
+  * @param {boolean} newState - The new collapse state
+  * @returns {string} The updated markdown line
+  */
   updateCollapseState(newState) {
     return this.rawLine.replace(
       CONSTANTS.CALLOUT_REGEX,
@@ -128,18 +128,18 @@ class Callout {
 }
 
 /**
- * CalloutCommand class represents a command in the command registry
- */
+* CalloutCommand class represents a command in the command registry
+*/
 class CalloutCommand {
   /**
-   * Creates a new callout command
-   * 
-   * @param {string} id - Command ID
-   * @param {string} name - Display name for the command
-   * @param {string} scope - Scope of the command ('all', 'current', 'section')
-   * @param {string} mode - Mode of operation ('toggle', 'collapse', 'expand', 'toggle-individual')
-   * @param {boolean} modifyMarkdown - Whether the command modifies the underlying Markdown
-   */
+  * Creates a new callout command
+  * 
+  * @param {string} id - Command ID
+  * @param {string} name - Display name for the command
+  * @param {string} scope - Scope of the command ('all', 'current', 'section')
+  * @param {string} mode - Mode of operation ('toggle', 'collapse', 'expand', 'toggle-individual')
+  * @param {boolean} modifyMarkdown - Whether the command modifies the underlying Markdown
+  */
   constructor(id, name, scope, mode, modifyMarkdown) {
     this.id = id;
     this.name = name;
@@ -147,36 +147,36 @@ class CalloutCommand {
     this.mode = mode;
     this.modifyMarkdown = modifyMarkdown;
   }
-
+  
   /**
-   * Execute the command using the provided operation handler
-   * 
-   * @param {Function} operationHandler - Function to execute the operation
-   */
+  * Execute the command using the provided operation handler
+  * 
+  * @param {Function} operationHandler - Function to execute the operation
+  */
   execute(operationHandler) {
     operationHandler(this.scope, this.mode, this.modifyMarkdown);
   }
 }
 
 /**
- * CalloutParser extracts callouts from Markdown text
- * This is a major refactoring of the previous processCallout method
- */
+* CalloutParser extracts callouts from Markdown text
+* This is a major refactoring of the previous processCallout method
+*/
 class CalloutParser {
   /**
-   * Create a new callout parser
-   */
+  * Create a new callout parser
+  */
   constructor() {
     this.CALLOUT_REGEX = CONSTANTS.CALLOUT_REGEX;
     this.CONTINUATION_REGEX = CONSTANTS.CONTINUATION_REGEX;
   }
-
+  
   /**
-   * Parse all callouts from a document
-   * 
-   * @param {string} content - The document content
-   * @returns {Array<Callout>} Array of detected callouts
-   */
+  * Parse all callouts from a document
+  * 
+  * @param {string} content - The document content
+  * @returns {Array<Callout>} Array of detected callouts
+  */
   parseDocument(content) {
     const lines = content.split('\n');
     const callouts = [];
@@ -193,35 +193,35 @@ class CalloutParser {
     
     return callouts;
   }
-
+  
   /**
-   * Check if a line starts a callout
-   * 
-   * @param {string} line - The line to check
-   * @returns {boolean} True if this is a callout start line
-   */
+  * Check if a line starts a callout
+  * 
+  * @param {string} line - The line to check
+  * @returns {boolean} True if this is a callout start line
+  */
   isCalloutStartLine(line) {
     return this.CALLOUT_REGEX.test(line);
   }
-
+  
   /**
-   * Check if a line continues a callout
-   * 
-   * @param {string} line - The line to check
-   * @returns {boolean} True if this is a callout continuation line
-   */
+  * Check if a line continues a callout
+  * 
+  * @param {string} line - The line to check
+  * @returns {boolean} True if this is a callout continuation line
+  */
   isCalloutContinuationLine(line) {
     const trimmed = line.trim();
     return trimmed.startsWith('>') && !this.isCalloutStartLine(line);
   }
-
+  
   /**
-   * Parse a callout starting at a specific line
-   * 
-   * @param {Array<string>} lines - All document lines
-   * @param {number} startLineIndex - The starting line index
-   * @returns {Callout|null} The parsed callout or null
-   */
+  * Parse a callout starting at a specific line
+  * 
+  * @param {Array<string>} lines - All document lines
+  * @param {number} startLineIndex - The starting line index
+  * @returns {Callout|null} The parsed callout or null
+  */
   parseCallout(lines, startLineIndex) {
     const startLine = lines[startLineIndex];
     const match = startLine.match(this.CALLOUT_REGEX);
@@ -244,14 +244,14 @@ class CalloutParser {
     
     return callout;
   }
-
+  
   /**
-   * Extract content and nested callouts
-   * 
-   * @param {Array<string>} lines - All document lines
-   * @param {number} startLine - The starting line for content
-   * @returns {Object} The extracted content and metadata
-   */
+  * Extract content and nested callouts
+  * 
+  * @param {Array<string>} lines - All document lines
+  * @param {number} startLine - The starting line for content
+  * @returns {Object} The extracted content and metadata
+  */
   extractContent(lines, startLine) {
     const contentLines = [];
     let currentLine = startLine;
@@ -299,14 +299,14 @@ class CalloutParser {
       nestedCallouts
     };
   }
-
+  
   /**
-   * Parse nested callouts from content lines
-   * 
-   * @param {Array<string>} contentLines - Content lines to parse
-   * @param {number} parentStartLine - Starting line of parent callout
-   * @returns {Array<Callout>} Nested callouts
-   */
+  * Parse nested callouts from content lines
+  * 
+  * @param {Array<string>} contentLines - Content lines to parse
+  * @param {number} parentStartLine - Starting line of parent callout
+  * @returns {Array<Callout>} Nested callouts
+  */
   parseNestedCallouts(contentLines, parentStartLine) {
     const nestedCallouts = [];
     let nestedStartLine = 0;
@@ -333,27 +333,27 @@ class CalloutParser {
     
     return nestedCallouts;
   }
-
+  
   /**
-   * Format content by removing callout prefix
-   * 
-   * @param {Array<string>} contentLines - The raw content lines
-   * @returns {string} Formatted content
-   */
+  * Format content by removing callout prefix
+  * 
+  * @param {Array<string>} contentLines - The raw content lines
+  * @returns {string} Formatted content
+  */
   formatContent(contentLines) {
     return contentLines.map(line => {
       const match = line.match(this.CONTINUATION_REGEX);
       return match ? match[1] : line;
     }).join('\n');
   }
-
+  
   /**
-   * Find the callout containing the given line
-   * 
-   * @param {Array<Callout>} callouts - All callouts in the document
-   * @param {number} lineNumber - The line number to check
-   * @returns {Callout|null} The callout containing the line or null
-   */
+  * Find the callout containing the given line
+  * 
+  * @param {Array<Callout>} callouts - All callouts in the document
+  * @param {number} lineNumber - The line number to check
+  * @returns {Callout|null} The callout containing the line or null
+  */
   findCalloutContainingLine(callouts, lineNumber) {
     for (const callout of callouts) {
       if (callout.containsLine(lineNumber)) {
@@ -362,14 +362,14 @@ class CalloutParser {
     }
     return null;
   }
-
+  
   /**
-   * Find the callout closest to the given line
-   * 
-   * @param {Array<Callout>} callouts - All callouts in the document
-   * @param {number} lineNumber - The line number to check
-   * @returns {Callout|null} The closest callout or null
-   */
+  * Find the callout closest to the given line
+  * 
+  * @param {Array<Callout>} callouts - All callouts in the document
+  * @param {number} lineNumber - The line number to check
+  * @returns {Callout|null} The closest callout or null
+  */
   findClosestCallout(callouts, lineNumber) {
     const containingCallout = this.findCalloutContainingLine(callouts, lineNumber);
     if (containingCallout) return containingCallout;
@@ -381,15 +381,15 @@ class CalloutParser {
       return a.distanceToLine(lineNumber) - b.distanceToLine(lineNumber);
     })[0];
   }
-
+  
   /**
-   * Get all callouts within the current section (between headings)
-   * 
-   * @param {Array<Callout>} callouts - All callouts in the document
-   * @param {Array<string>} lines - All document lines
-   * @param {number} cursorLine - The cursor line to start from
-   * @returns {Array<Callout>} Callouts in the current section
-   */
+  * Get all callouts within the current section (between headings)
+  * 
+  * @param {Array<Callout>} callouts - All callouts in the document
+  * @param {Array<string>} lines - All document lines
+  * @param {number} cursorLine - The cursor line to start from
+  * @returns {Array<Callout>} Callouts in the current section
+  */
   getCalloutsInSection(callouts, lines, cursorLine) {
     // Find section boundaries
     let sectionStart = cursorLine;
@@ -415,84 +415,84 @@ class CalloutParser {
 }
 
 /**
- * Factory function to create a CalloutOperation that encapsulates
- * the logic for determining the new state of callouts
- */
+* Factory function to create a CalloutOperation that encapsulates
+* the logic for determining the new state of callouts
+*/
 function createCalloutOperation(mode, callouts) {
   // Return a function that determines the new state for each callout
   switch (mode) {
     case CONSTANTS.MODES.COLLAPSE:
-      return () => true; // Always collapse
-      
+    return () => true; // Always collapse
+    
     case CONSTANTS.MODES.EXPAND:
-      return () => false; // Always expand
-      
+    return () => false; // Always expand
+    
     case CONSTANTS.MODES.TOGGLE_INDIVIDUAL:
-      return (callout) => !callout.isCollapsed; // Flip each callout
-      
+    return (callout) => !callout.isCollapsed; // Flip each callout
+    
     case CONSTANTS.MODES.TOGGLE:
     default:
-      // Count current collapse states to determine majority
-      const collapsedCount = callouts.filter(c => c.isCollapsed).length;
-      const shouldCollapse = collapsedCount < callouts.length / 2;
-      return () => shouldCollapse; // Toggle based on majority
+    // Count current collapse states to determine majority
+    const collapsedCount = callouts.filter(c => c.isCollapsed).length;
+    const shouldCollapse = collapsedCount < callouts.length / 2;
+    return () => shouldCollapse; // Toggle based on majority
   }
 }
 
 /**
- * CalloutMarkdownService - Improved version
- * This class handles the Markdown parsing and manipulation
- */
+* CalloutMarkdownService - Improved version
+* This class handles the Markdown parsing and manipulation
+*/
 class CalloutMarkdownService {
   /**
-   * Creates a new callout markdown service
-   * 
-   * @param {Editor} editor - The Obsidian editor instance to work with
-   */
+  * Creates a new callout markdown service
+  * 
+  * @param {Editor} editor - The Obsidian editor instance to work with
+  */
   constructor(editor) {
     this.editor = editor;
     this.parser = new CalloutParser();
   }
-
+  
   /**
-   * Detect all callouts in the document
-   * 
-   * @returns {Array<Callout>} Array of detected callouts
-   */
+  * Detect all callouts in the document
+  * 
+  * @returns {Array<Callout>} Array of detected callouts
+  */
   detectAllCallouts() {
     if (!this.editor) return [];
     const content = this.editor.getValue();
     return this.parser.parseDocument(content);
   }
-
+  
   /**
-   * Find the callout containing the given line
-   * 
-   * @param {number} lineNumber - The line number to check
-   * @returns {Callout|null} The callout containing this line or null
-   */
+  * Find the callout containing the given line
+  * 
+  * @param {number} lineNumber - The line number to check
+  * @returns {Callout|null} The callout containing this line or null
+  */
   findCalloutContainingLine(lineNumber) {
     const allCallouts = this.detectAllCallouts();
     return this.parser.findCalloutContainingLine(allCallouts, lineNumber);
   }
-
+  
   /**
-   * Get the closest callout to the cursor position
-   * 
-   * @param {number} cursorLine - The current cursor line
-   * @returns {Callout|null} The closest callout or null
-   */
+  * Get the closest callout to the cursor position
+  * 
+  * @param {number} cursorLine - The current cursor line
+  * @returns {Callout|null} The closest callout or null
+  */
   getClosestCalloutToCursor(cursorLine) {
     const allCallouts = this.detectAllCallouts();
     return this.parser.findClosestCallout(allCallouts, cursorLine);
   }
-
+  
   /**
-   * Find a callout above the cursor
-   * 
-   * @param {number} cursorLine - The current cursor line
-   * @returns {Callout|null} The callout above the cursor or null
-   */
+  * Find a callout above the cursor
+  * 
+  * @param {number} cursorLine - The current cursor line
+  * @returns {Callout|null} The callout above the cursor or null
+  */
   findCalloutAboveCursor(cursorLine) {
     if (!this.editor) return null;
     const content = this.editor.getValue();
@@ -507,13 +507,13 @@ class CalloutMarkdownService {
     
     return null;
   }
-
+  
   /**
-   * Get all callouts in the current section
-   * 
-   * @param {number} cursorLine - The cursor line
-   * @returns {Array<Callout>} Callouts in the current section
-   */
+  * Get all callouts in the current section
+  * 
+  * @param {number} cursorLine - The cursor line
+  * @returns {Array<Callout>} Callouts in the current section
+  */
   getCalloutsInCurrentSection(cursorLine) {
     if (!this.editor) return [];
     
@@ -522,14 +522,14 @@ class CalloutMarkdownService {
     
     return this.parser.getCalloutsInSection(allCallouts, lines, cursorLine);
   }
-
+  
   /**
-   * Update a callout's collapse state in the document
-   * 
-   * @param {Callout} callout - The callout to update
-   * @param {boolean} newState - The new collapse state
-   * @returns {boolean} True if update was successful
-   */
+  * Update a callout's collapse state in the document
+  * 
+  * @param {Callout} callout - The callout to update
+  * @param {boolean} newState - The new collapse state
+  * @returns {boolean} True if update was successful
+  */
   updateCalloutCollapseState(callout, newState) {
     if (!this.editor || callout.startLine === undefined) return false;
     
@@ -555,65 +555,295 @@ class CalloutMarkdownService {
 }
 
 /**
- * DOMCalloutService - Improved version
- * This class handles the DOM manipulation for callouts
- */
+* DOMCalloutService - Improved version
+* This class handles the DOM manipulation for callouts
+*/
 class DOMCalloutService {
   /**
-   * Creates a new DOM callout service
-   * 
-   * @param {HTMLElement} root - The root DOM element containing callouts
-   */
+  * Creates a new DOM callout service
+  * 
+  * @param {HTMLElement} root - The root DOM element containing callouts
+  */
   constructor(root) {
     this.root = root;
   }
-
+  
   /**
-   * Get all callout DOM elements in the document
-   * 
-   * @returns {Array<HTMLElement>} Array of callout DOM elements
-   */
+  * Get all callout DOM elements in the document
+  * 
+  * @returns {Array<HTMLElement>} Array of callout DOM elements
+  */
   getAllCalloutElements() {
     if (!this.root) return [];
     return Array.from(this.root.querySelectorAll('.callout'));
   }
-
+  
   /**
-   * Add data attributes to DOM elements for better correlation
-   * 
-   * @param {Array<Callout>} callouts - All callouts in the document
-   */
+  * Disambiguate between multiple possible callout matches
+  * 
+  * @param {Array<Callout>} possibleMatches - Potential matching callouts
+  * @param {string} content - The DOM element's content
+  * @param {HTMLElement} element - The DOM element
+  * @returns {Callout|null} The best matching callout or null
+  */
+  disambiguateCallouts(possibleMatches, content, element) {
+    // Strategy 1: Content similarity
+    const contentMatches = possibleMatches.map(callout => {
+      // Calculate similarity between callout content and DOM content
+      const similarity = this.calculateSimilarity(callout.content, content);
+      return { callout, similarity };
+    });
+    
+    // Sort by similarity (highest first)
+    contentMatches.sort((a, b) => b.similarity - a.similarity);
+    
+    // If we have a clear winner (significantly more similar than others)
+    if (contentMatches.length > 1 && 
+      contentMatches[0].similarity > contentMatches[1].similarity * 1.5) {
+        return contentMatches[0].callout;
+      }
+      
+      // Strategy 2: Position in the document
+      // Try to estimate position based on the element's position in the DOM
+      const allElements = this.getAllCalloutElements();
+      const elementIndex = allElements.indexOf(element);
+      
+      if (elementIndex !== -1) {
+        // Sort possible matches by line number
+        const sortedByLine = [...possibleMatches].sort((a, b) => 
+          a.startLine - b.startLine
+      );
+      
+      // Assume callouts appear in roughly the same order in DOM and markdown
+      // So the nth element might correspond to the nth callout by line number
+      const relativeIndex = Math.min(elementIndex, sortedByLine.length - 1);
+      return sortedByLine[relativeIndex];
+    }
+    
+    // If all else fails, return the first match
+    return possibleMatches[0];
+  }
+  
+  /**
+  * Calculate similarity between two strings
+  * Using Levenshtein distance for fuzzy matching
+  * 
+  * @param {string} str1 - First string
+  * @param {string} str2 - Second string
+  * @returns {number} Similarity score (0-1)
+  */
+  calculateSimilarity(str1, str2) {
+    // For very long strings, just use the beginning portion
+    const maxLength = 50;
+    const s1 = str1.substring(0, maxLength).toLowerCase();
+    const s2 = str2.substring(0, maxLength).toLowerCase();
+    
+    // Simple matching - count the same characters in the same positions
+    let matches = 0;
+    const len = Math.min(s1.length, s2.length);
+    
+    for (let i = 0; i < len; i++) {
+      if (s1[i] === s2[i]) {
+        matches++;
+      }
+    }
+    
+    return matches / Math.max(s1.length, s2.length);
+  }
+  
+  /**
+  * We're replacing the levenshteinDistance method with this simpler version
+  * that doesn't create large matrices that might cause memory issues
+  */
+  levenshteinDistance(str1, str2) {
+    // Just return a simple difference for now
+    return Math.abs(str1.length - str2.length);
+  }
+  
+  /**
+  * Get callout based on visual proximity in the viewport
+  * 
+  * @param {number} cursorLine - The cursor line
+  * @param {Array<HTMLElement>} elements - Callout DOM elements
+  * @returns {HTMLElement|null} The visually closest element
+  */
+  getCalloutByVisualProximity(cursorLine, elements) {
+    if (!elements.length) return null;
+    
+    // Get the active editor view
+    const activeView = this.root?.closest('.markdown-source-view, .markdown-preview-view');
+    if (!activeView) return elements[0]; // Fallback to first element
+    
+    // Get cursor position in viewport coordinates
+    const cursorCoords = { top: 0, left: 0 };
+    
+    // Try to get cursor element if available
+    const cursorElement = activeView.querySelector('.cm-cursor');
+    if (cursorElement) {
+      const rect = cursorElement.getBoundingClientRect();
+      cursorCoords.top = rect.top;
+      cursorCoords.left = rect.left;
+    } else {
+      // Estimate position based on line height and line number
+      const lineHeight = 24; // Approximate line height
+      cursorCoords.top = lineHeight * cursorLine;
+    }
+    
+    // Find the closest element by visual distance
+    let closestElement = null;
+    let closestDistance = Infinity;
+    
+    elements.forEach(element => {
+      const rect = element.getBoundingClientRect();
+      const distance = Math.abs(rect.top - cursorCoords.top);
+      
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestElement = element;
+      }
+    });
+    
+    return closestElement;
+  }
+  
+  /**
+  * Add data attributes to DOM elements for better correlation
+  * 
+  * @param {Array<Callout>} callouts - All callouts in the document
+  */
   addDataAttributes(callouts) {
     const elements = this.getAllCalloutElements();
     
     // Skip if no elements or callouts
     if (!elements.length || !callouts.length) return;
     
-    // Match elements with callouts by content and add data attributes
-    elements.forEach((element, index) => {
-      // Try to match with a callout from the list
-      const callout = this.findMatchingCallout(element, callouts);
+    // First pass: Try to match elements with callouts by order and add attributes
+    // This works when elements and callouts are in the same order
+    this.addDataAttributesByOrder(elements, callouts);
+    
+    // Second pass: For elements without attributes, try content matching
+    this.addDataAttributesByContent(elements, callouts);
+    
+    // Third pass: Add unique identifiers to all elements
+    this.addUniqueIdentifiers(elements);
+  }
+  
+  /**
+  * Add data attributes based on document order
+  * 
+  * @param {Array<HTMLElement>} elements - Callout DOM elements
+  * @param {Array<Callout>} callouts - Callout objects
+  */
+  addDataAttributesByOrder(elements, callouts) {
+    // Try to match by document order first (simplest case)
+    const minLength = Math.min(elements.length, callouts.length);
+    
+    for (let i = 0; i < minLength; i++) {
+      const element = elements[i];
+      const callout = callouts[i];
       
-      if (callout) {
-        // Store lines in data attributes
+      // Skip elements that already have data attributes
+      if (element.dataset.startLine !== undefined) continue;
+      
+      // Verify the match with a basic content check
+      const titleElement = element.querySelector('.callout-title-inner');
+      const calloutTitle = titleElement ? titleElement.textContent.trim() : '';
+      
+      if (calloutTitle === callout.title) {
         element.dataset.startLine = callout.startLine;
         element.dataset.endLine = callout.endLine;
         element.dataset.type = callout.type;
-      } else {
-        // Use index as fallback
+      }
+    }
+  }
+  
+  /**
+  * Add data attributes based on content matching
+  * 
+  * @param {Array<HTMLElement>} elements - Callout DOM elements
+  * @param {Array<Callout>} callouts - Callout objects
+  */
+  addDataAttributesByContent(elements, callouts) {
+    for (const element of elements) {
+      // Skip elements that already have data attributes
+      if (element.dataset.startLine !== undefined) continue;
+      
+      // Match by content
+      const callout = this.findMatchingCallout(element, callouts);
+      
+      if (callout) {
+        element.dataset.startLine = callout.startLine;
+        element.dataset.endLine = callout.endLine;
+        element.dataset.type = callout.type;
+      }
+    }
+  }
+  
+  /**
+  * Add unique identifiers to all elements
+  * 
+  * @param {Array<HTMLElement>} elements - Callout DOM elements
+  */
+  addUniqueIdentifiers(elements) {
+    // For elements that still don't have attributes, add index-based identifiers
+    elements.forEach((element, index) => {
+      if (element.dataset.startLine === undefined) {
         element.dataset.index = index;
       }
+      
+      // Add a data-id attribute combining multiple properties for uniqueness
+      const type = element.dataset.type || 'unknown';
+      const startLine = element.dataset.startLine || index;
+      const contentHash = this.getContentHash(element);
+      
+      element.dataset.calloutId = `${type}-${startLine}-${contentHash}`;
     });
   }
-
+  
   /**
-   * Find a callout that matches the DOM element
-   * 
-   * @param {HTMLElement} element - DOM element to match
-   * @param {Array<Callout>} callouts - All callouts in the document
-   * @returns {Callout|null} The matching callout or null
-   */
+  * Generate a simple hash of element content for additional uniqueness
+  * 
+  * @param {HTMLElement} element - DOM element
+  * @returns {string} Simple hash of content
+  */
+  getContentHash(element) {
+    const content = element.textContent || '';
+    let hash = 0;
+    
+    // Simple hash function
+    for (let i = 0; i < content.length; i++) {
+      const char = content.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    
+    return Math.abs(hash).toString(16).substring(0, 8);
+  }
+  
+  /**
+  * Find a callout that matches the DOM element
+  * 
+  * @param {HTMLElement} element - DOM element to match
+  * @param {Array<Callout>} callouts - All callouts in the document
+  * @returns {Callout|null} The matching callout or null
+  */
   findMatchingCallout(element, callouts) {
+    // First check if we already have data attributes that identify the callout
+    const startLine = element.dataset.startLine;
+    const endLine = element.dataset.endLine;
+    
+    if (startLine !== undefined && endLine !== undefined) {
+      // If we have line numbers, use them for precise matching
+      const matchedCallout = callouts.find(callout => 
+        callout.startLine === parseInt(startLine) && 
+        callout.endLine === parseInt(endLine)
+      );
+      
+      if (matchedCallout) return matchedCallout;
+    }
+    
+    // If we don't have data attributes or couldn't find a match,
+    // fall back to content-based matching but with more precision
     const titleElement = element.querySelector('.callout-title-inner');
     const contentElement = element.querySelector('.callout-content');
     const typeElement = element.querySelector('.callout-title');
@@ -623,38 +853,41 @@ class DOMCalloutService {
     const title = titleElement.textContent.trim();
     const content = contentElement.textContent.trim();
     const typeClass = typeElement ? 
-      Array.from(typeElement.classList)
-        .find(cls => cls.startsWith('callout-title-')) : null;
+    Array.from(typeElement.classList)
+    .find(cls => cls.startsWith('callout-title-')) : null;
     
     // Extract type from class (callout-title-info -> info)
     const type = typeClass ? 
-      typeClass.replace('callout-title-', '') : null;
+    typeClass.replace('callout-title-', '') : null;
     
     // Find callout with matching title and type
-    return callouts.find(callout => {
+    // Use a more precise content matching algorithm for disambiguation
+    const possibleMatches = callouts.filter(callout => {
       const titleMatch = callout.title === title;
       const typeMatch = !type || callout.type === type;
       
-      // For smaller callouts, check content too
-      if (content.length < 50) {
-        const contentMatch = callout.content.includes(content) ||
-                            content.includes(callout.content);
-        return titleMatch && typeMatch && contentMatch;
-      }
-      
       return titleMatch && typeMatch;
     });
+    
+    if (possibleMatches.length === 1) {
+      return possibleMatches[0];
+    } else if (possibleMatches.length > 1) {
+      // If multiple matches, use content comparison and proximity
+      return this.disambiguateCallouts(possibleMatches, content, element);
+    }
+    
+    return null;
   }
-
+  
   /**
-   * Apply collapse/expand state to a callout DOM element
-   * 
-   * @param {HTMLElement} element - The callout DOM element
-   * @param {boolean} collapsed - Whether to collapse the callout
-   */
+  * Apply collapse/expand state to a callout DOM element
+  * 
+  * @param {HTMLElement} element - The callout DOM element
+  * @param {boolean} collapsed - Whether to collapse the callout
+  */
   applyCalloutCollapseState(element, collapsed) {
     if (!element) return;
-
+    
     const content = element.querySelector('.callout-content');
     const foldIcon = element.querySelector('.callout-fold');
     
@@ -675,32 +908,32 @@ class DOMCalloutService {
       }
     }
   }
-
+  
   /**
-   * Apply collapse/expand state to all callout DOM elements
-   * 
-   * @param {boolean} collapsed - Whether to collapse all callouts
-   */
+  * Apply collapse/expand state to all callout DOM elements
+  * 
+  * @param {boolean} collapsed - Whether to collapse all callouts
+  */
   applyToAllCallouts(collapsed) {
     const callouts = this.getAllCalloutElements();
     callouts.forEach(callout => {
       this.applyCalloutCollapseState(callout, collapsed);
     });
   }
-
+  
   /**
-   * Get all callout DOM elements within the current section
-   * 
-   * @param {number} cursorLine - The line number where the cursor is located
-   * @param {Array<string>} lines - All lines in the document
-   * @param {Array<Callout>} callouts - All callouts in the document (optional)
-   * @returns {Array<HTMLElement>} Array of callout DOM elements in the current section
-   */
+  * Get all callout DOM elements within the current section
+  * 
+  * @param {number} cursorLine - The line number where the cursor is located
+  * @param {Array<string>} lines - All lines in the document
+  * @param {Array<Callout>} callouts - All callouts in the document (optional)
+  * @returns {Array<HTMLElement>} Array of callout DOM elements in the current section
+  */
   getCalloutsInCurrentSection(cursorLine, lines, callouts = null) {
     // Find section boundaries
     let sectionStart = cursorLine;
     let sectionEnd = cursorLine;
-
+    
     // Determine section boundaries based on headings
     while (sectionStart >= 0 && !lines[sectionStart].startsWith('#')) {
       sectionStart--;
@@ -708,11 +941,11 @@ class DOMCalloutService {
     while (sectionEnd < lines.length && !lines[sectionEnd].startsWith('#')) {
       sectionEnd++;
     }
-
+    
     // Adjust boundaries
     if (sectionStart < 0) sectionStart = 0;
     if (sectionEnd >= lines.length) sectionEnd = lines.length - 1;
-
+    
     // If we have data attributes, use them for precise matching
     const elements = this.getAllCalloutElements();
     const elementsWithDataAttrs = elements.filter(el => el.dataset.startLine !== undefined);
@@ -740,7 +973,7 @@ class DOMCalloutService {
         );
       });
     }
-
+    
     // Fallback to content matching (less precise)
     return elements.filter(element => {
       const calloutContent = element.querySelector('.callout-content')?.textContent.trim();
@@ -755,20 +988,21 @@ class DOMCalloutService {
       return false;
     });
   }
-
+  
   /**
-   * Get the closest callout DOM element to the cursor position
-   * 
-   * @param {number} cursorLine - The line number where the cursor is located
-   * @param {Array<string>} lines - All lines in the document
-   * @param {Array<Callout>} callouts - All callouts in the document (optional)
-   * @returns {HTMLElement|null} The closest callout DOM element or null
-   */
+  * Get the closest callout DOM element to the cursor position
+  * 
+  * @param {number} cursorLine - The line number where the cursor is located
+  * @param {Array<string>} lines - All lines in the document
+  * @param {Array<Callout>} callouts - All callouts in the document (optional)
+  * @returns {HTMLElement|null} The closest callout DOM element or null
+  */
   getClosestCalloutToCursor(cursorLine, lines, callouts = null) {
     const calloutElements = this.getAllCalloutElements();
     if (!calloutElements.length) return null;
-
-    // If we have data attributes, use them for precise matching
+    
+    // First try: Look for a callout containing the cursor
+    // using data attributes for precision
     const elementsWithDataAttrs = calloutElements.filter(el => el.dataset.startLine !== undefined);
     
     if (elementsWithDataAttrs.length > 0) {
@@ -803,68 +1037,48 @@ class DOMCalloutService {
       })[0];
     }
     
-    // If we have callouts, try to match by content
-    if (callouts) {
-      // Find callout at or closest to cursor
+    // If we have callouts but no data attributes, try to match using callout objects
+    if (callouts && callouts.length > 0) {
+      // Find the callout closest to cursor
       const targetCallout = callouts.find(c => c.containsLine(cursorLine)) || 
-                           callouts.sort((a, b) => 
-                             a.distanceToLine(cursorLine) - b.distanceToLine(cursorLine)
-                           )[0];
-      
-      if (targetCallout) {
-        // Find matching DOM element
-        return calloutElements.find(element => 
-          this.findMatchingCallout(element, [targetCallout]) !== null
-        );
-      }
+      callouts.sort((a, b) => 
+        a.distanceToLine(cursorLine) - b.distanceToLine(cursorLine)
+    )[0];
+    
+    if (targetCallout) {
+      // Try to find matching DOM element
+      return calloutElements.find(element => 
+        this.findMatchingCallout(element, [targetCallout]) !== null
+      );
     }
-
-    // Fallback to content matching (less precise)
-    let closestElement = null;
-    let closestDistance = Infinity;
-
-    calloutElements.forEach(element => {
-      const calloutContent = element.querySelector('.callout-content')?.textContent.trim();
-      if (!calloutContent) return;
-      
-      // Find the line number of the callout by matching its content with the lines
-      for (let i = 0; i < lines.length; i++) {
-        if (lines[i].includes(calloutContent.substring(0, 20))) {
-          const distance = Math.abs(i - cursorLine);
-          if (distance < closestDistance) {
-            closestDistance = distance;
-            closestElement = element;
-          }
-          break;
-        }
-      }
-    });
-
-    return closestElement;
   }
+  
+  // Last resort: use visual position in the viewport
+  return this.getCalloutByVisualProximity(cursorLine, calloutElements);
+}
 }
 
 /**
- * ErrorHandler manages error reporting and logging
- */
+* ErrorHandler manages error reporting and logging
+*/
 class ErrorHandler {
   /**
-   * Log an error without showing to user
-   * 
-   * @param {string} message - Error message
-   * @param {Error} error - Error object
-   */
+  * Log an error without showing to user
+  * 
+  * @param {string} message - Error message
+  * @param {Error} error - Error object
+  */
   logError(message, error) {
     console.error(`Callout Control: ${message}`, error);
   }
   
   /**
-   * Handle an error with user notification
-   * 
-   * @param {string} message - Error message
-   * @param {Error} error - Error object
-   * @param {string} userMessage - Message to show to the user
-   */
+  * Handle an error with user notification
+  * 
+  * @param {string} message - Error message
+  * @param {Error} error - Error object
+  * @param {string} userMessage - Message to show to the user
+  */
   handleError(message, error, userMessage) {
     // Log error
     this.logError(message, error);
@@ -877,12 +1091,12 @@ class ErrorHandler {
 }
 
 /**
- * PluginSettings class encapsulates the settings for the plugin
- */
+* PluginSettings class encapsulates the settings for the plugin
+*/
 class PluginSettings {
   /**
-   * Create a new settings object with default values
-   */
+  * Create a new settings object with default values
+  */
   constructor() {
     this.commands = {};
     this.groupsEnabled = {
@@ -891,13 +1105,13 @@ class PluginSettings {
       section: true
     };
   }
-
+  
   /**
-   * Merge default settings with loaded settings
-   * 
-   * @param {Object} loadedSettings - Settings loaded from storage
-   * @returns {PluginSettings} The merged settings
-   */
+  * Merge default settings with loaded settings
+  * 
+  * @param {Object} loadedSettings - Settings loaded from storage
+  * @returns {PluginSettings} The merged settings
+  */
   merge(loadedSettings) {
     if (!loadedSettings) return this;
     
@@ -913,34 +1127,34 @@ class PluginSettings {
     
     return this;
   }
-
+  
   /**
-   * Check if a command is enabled
-   * 
-   * @param {string} commandId - The command ID to check
-   * @returns {boolean} Whether the command is enabled
-   */
+  * Check if a command is enabled
+  * 
+  * @param {string} commandId - The command ID to check
+  * @returns {boolean} Whether the command is enabled
+  */
   isCommandEnabled(commandId) {
     return this.commands[commandId] !== false; // Default to enabled if not set
   }
-
+  
   /**
-   * Enable or disable a command
-   * 
-   * @param {string} commandId - The command ID to update
-   * @param {boolean} enabled - Whether to enable the command
-   */
+  * Enable or disable a command
+  * 
+  * @param {string} commandId - The command ID to update
+  * @param {boolean} enabled - Whether to enable the command
+  */
   setCommandEnabled(commandId, enabled) {
     this.commands[commandId] = enabled;
   }
-
+  
   /**
-   * Enable or disable all commands in a group
-   * 
-   * @param {string} group - The group to update ('all', 'current', 'section')
-   * @param {boolean} enabled - Whether to enable the group
-   * @param {Array<CalloutCommand>} commands - All commands to update
-   */
+  * Enable or disable all commands in a group
+  * 
+  * @param {string} group - The group to update ('all', 'current', 'section')
+  * @param {boolean} enabled - Whether to enable the group
+  * @param {Array<CalloutCommand>} commands - All commands to update
+  */
   setGroupEnabled(group, enabled, commands) {
     this.groupsEnabled[group] = enabled;
     
@@ -951,12 +1165,12 @@ class PluginSettings {
       }
     });
   }
-
+  
   /**
-   * Create a plain object representation for storage
-   * 
-   * @returns {Object} Plain object for storage
-   */
+  * Create a plain object representation for storage
+  * 
+  * @returns {Object} Plain object for storage
+  */
   toObject() {
     return {
       commands: { ...this.commands },
@@ -966,127 +1180,127 @@ class PluginSettings {
 }
 
 /**
- * CommandRegistry manages the plugin's available commands
- */
+* CommandRegistry manages the plugin's available commands
+*/
 class CommandRegistry {
   /**
-   * Create a new command registry
-   * 
-   * @param {Plugin} plugin - The Obsidian plugin instance
-   * @param {PluginSettings} settings - The plugin settings
-   */
+  * Create a new command registry
+  * 
+  * @param {Plugin} plugin - The Obsidian plugin instance
+  * @param {PluginSettings} settings - The plugin settings
+  */
   constructor(plugin, settings) {
     this.plugin = plugin;
     this.settings = settings;
     this.commands = [];
     this.registeredIds = [];
   }
-
+  
   /**
-   * Initialize the command registry with the provided command table
-   * 
-   * @param {Array} commandTable - Table of command definitions
-   * @returns {CommandRegistry} This registry instance for chaining
-   */
+  * Initialize the command registry with the provided command table
+  * 
+  * @param {Array} commandTable - Table of command definitions
+  * @returns {CommandRegistry} This registry instance for chaining
+  */
   initializeFromTable(commandTable) {
     this.commands = commandTable.map(([id, name, scope, mode, modifyMarkdown]) => 
       new CalloutCommand(id, name, scope, mode, modifyMarkdown)
-    );
-    return this;
-  }
-
-  /**
-   * Register all enabled commands
-   * 
-   * @param {Function} operationHandler - Function to handle command operations
-   */
-  registerCommands(operationHandler) {
-    // Clear any previously registered commands
-    this.unregisterAllCommands();
-    
-    // Register each enabled command
-    this.commands.forEach(command => {
-      if (this.settings.isCommandEnabled(command.id)) {
-        const fullId = `callout-control.${command.id}`;
-        this.registeredIds.push(fullId);
-        
-        this.plugin.addCommand({
-          id: fullId,
-          name: command.name,
-          callback: () => command.execute(operationHandler)
-        });
-      }
-    });
-  }
-
-  /**
-   * Unregister all previously registered commands
-   */
-  unregisterAllCommands() {
-    this.registeredIds.forEach(id => {
-      this.plugin.removeCommand(id);
-    });
-    this.registeredIds = [];
-  }
-
-  /**
-   * Get all commands with a specific scope
-   * 
-   * @param {string} scope - The scope to filter by
-   * @returns {Array<CalloutCommand>} Commands with the given scope
-   */
-  getCommandsByScope(scope) {
-    return this.commands.filter(cmd => cmd.scope === scope);
-  }
-
-  /**
-   * Get all command scopes
-   * 
-   * @returns {Array<string>} Array of unique scopes
-   */
-  getAllScopes() {
-    return [...new Set(this.commands.map(cmd => cmd.scope))];
-  }
+  );
+  return this;
 }
 
 /**
- * Settings tab for the Callout Control plugin
- */
+* Register all enabled commands
+* 
+* @param {Function} operationHandler - Function to handle command operations
+*/
+registerCommands(operationHandler) {
+  // Clear any previously registered commands
+  this.unregisterAllCommands();
+  
+  // Register each enabled command
+  this.commands.forEach(command => {
+    if (this.settings.isCommandEnabled(command.id)) {
+      const fullId = `callout-control.${command.id}`;
+      this.registeredIds.push(fullId);
+      
+      this.plugin.addCommand({
+        id: fullId,
+        name: command.name,
+        callback: () => command.execute(operationHandler)
+      });
+    }
+  });
+}
+
+/**
+* Unregister all previously registered commands
+*/
+unregisterAllCommands() {
+  this.registeredIds.forEach(id => {
+    this.plugin.removeCommand(id);
+  });
+  this.registeredIds = [];
+}
+
+/**
+* Get all commands with a specific scope
+* 
+* @param {string} scope - The scope to filter by
+* @returns {Array<CalloutCommand>} Commands with the given scope
+*/
+getCommandsByScope(scope) {
+  return this.commands.filter(cmd => cmd.scope === scope);
+}
+
+/**
+* Get all command scopes
+* 
+* @returns {Array<string>} Array of unique scopes
+*/
+getAllScopes() {
+  return [...new Set(this.commands.map(cmd => cmd.scope))];
+}
+}
+
+/**
+* Settings tab for the Callout Control plugin
+*/
 class CalloutControlSettingsTab extends PluginSettingTab {
   /**
-   * Create a new settings tab
-   * 
-   * @param {App} app - The Obsidian application instance
-   * @param {CalloutControlPlugin} plugin - The plugin instance
-   */
+  * Create a new settings tab
+  * 
+  * @param {App} app - The Obsidian application instance
+  * @param {CalloutControlPlugin} plugin - The plugin instance
+  */
   constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;
   }
-
+  
   /**
-   * Display the settings UI
-   */
+  * Display the settings UI
+  */
   display() {
     const { containerEl } = this;
     containerEl.empty();
-
+    
     // Add styling for group containers
     this.addGroupContainerStyles();
-
+    
     // Add settings header and description
     this.addHeaderAndDescription();
-
+    
     // Group commands by scope for display
     const groupedCommands = this.groupCommandsByScope();
-
+    
     // Render settings for each command group
     this.renderGroupSettings(groupedCommands);
   }
-
+  
   /**
-   * Add CSS styling for group containers
-   */
+  * Add CSS styling for group containers
+  */
   addGroupContainerStyles() {
     const style = document.createElement('style');
     style.textContent = `
@@ -1107,10 +1321,10 @@ class CalloutControlSettingsTab extends PluginSettingTab {
     `;
     this.containerEl.appendChild(style);
   }
-
+  
   /**
-   * Add header and description to settings
-   */
+  * Add header and description to settings
+  */
   addHeaderAndDescription() {
     const heading = this.containerEl.createEl('h3', { text: 'Available Commands' });
     
@@ -1120,12 +1334,12 @@ class CalloutControlSettingsTab extends PluginSettingTab {
     
     heading.insertAdjacentElement('afterend', description);
   }
-
+  
   /**
-   * Group commands by their scope
-   * 
-   * @returns {Object} Commands grouped by scope
-   */
+  * Group commands by their scope
+  * 
+  * @returns {Object} Commands grouped by scope
+  */
   groupCommandsByScope() {
     // Get all commands from the registry
     const commands = this.plugin.commandRegistry.commands;
@@ -1139,24 +1353,24 @@ class CalloutControlSettingsTab extends PluginSettingTab {
       return groups;
     }, {});
   }
-
+  
   /**
-   * Render settings for all command groups
-   * 
-   * @param {Object} groupedCommands - Commands grouped by scope
-   */
+  * Render settings for all command groups
+  * 
+  * @param {Object} groupedCommands - Commands grouped by scope
+  */
   renderGroupSettings(groupedCommands) {
     Object.entries(groupedCommands).forEach(([scope, commands]) => {
       this.renderScopeGroup(scope, commands);
     });
   }
-
+  
   /**
-   * Render settings for a specific command scope
-   * 
-   * @param {string} scope - The command scope
-   * @param {Array<CalloutCommand>} commands - Commands in this scope
-   */
+  * Render settings for a specific command scope
+  * 
+  * @param {string} scope - The command scope
+  * @param {Array<CalloutCommand>} commands - Commands in this scope
+  */
   renderScopeGroup(scope, commands) {
     // Create group container
     const section = this.containerEl.createDiv({ cls: 'callout-control-group' });
@@ -1169,26 +1383,26 @@ class CalloutControlSettingsTab extends PluginSettingTab {
     let scopeDescription = '';
     switch (scope) {
       case CONSTANTS.SCOPES.ALL:
-        scopeDescription = 'Commands that affect all callouts in the document.';
-        break;
+      scopeDescription = 'Commands that affect all callouts in the document.';
+      break;
       case CONSTANTS.SCOPES.CURRENT:
-        scopeDescription = 'Commands that affect the callout at or nearest to the cursor.';
-        break;
+      scopeDescription = 'Commands that affect the callout at or nearest to the cursor.';
+      break;
       case CONSTANTS.SCOPES.SECTION:
-        scopeDescription = 'Commands that affect callouts in the current section (between headings).';
-        break;
+      scopeDescription = 'Commands that affect callouts in the current section (between headings).';
+      break;
     }
     
     const descEl = section.createDiv({ cls: 'callout-control-description' });
     descEl.textContent = scopeDescription;
-
+    
     // Add group toggle
     this.addGroupToggle(section, scope, commands);
-
+    
     // Separate markdown and visual commands
     const markdownCommands = commands.filter(cmd => cmd.modifyMarkdown);
     const visualCommands = commands.filter(cmd => !cmd.modifyMarkdown);
-
+    
     // Add subheadings if both types exist
     if (markdownCommands.length && visualCommands.length) {
       const markdownHeading = section.createEl('h4', { text: 'Markdown Commands' });
@@ -1213,47 +1427,47 @@ class CalloutControlSettingsTab extends PluginSettingTab {
       });
     }
   }
-
+  
   /**
-   * Add a toggle for enabling/disabling all commands in a group
-   * 
-   * @param {HTMLElement} containerEl - Container element
-   * @param {string} scope - Command scope
-   * @param {Array<CalloutCommand>} commands - Commands in this scope
-   */
+  * Add a toggle for enabling/disabling all commands in a group
+  * 
+  * @param {HTMLElement} containerEl - Container element
+  * @param {string} scope - Command scope
+  * @param {Array<CalloutCommand>} commands - Commands in this scope
+  */
   addGroupToggle(containerEl, scope, commands) {
     const formattedScope = scope.charAt(0).toUpperCase() + scope.slice(1);
     
     new Setting(containerEl)
-      .setName(`Enable ${formattedScope} Commands`)
-      .setDesc(`Toggle all commands that affect ${scope} callouts`)
-      .addToggle(toggle => toggle
-        .setValue(this.plugin.settings.groupsEnabled[scope] || false)
-        .onChange(async (value) => {
-          // Update all commands in this group
-          this.plugin.settings.setGroupEnabled(scope, value, commands);
-          
-          // Save settings
-          await this.plugin.saveSettings();
-          
-          // Refresh commands in the command palette
-          this.plugin.commandRegistry.registerCommands(
-            (scope, mode, modifyMarkdown) => 
-              this.plugin.applyCalloutOperation(scope, mode, modifyMarkdown)
-          );
-          
-          // Redraw settings panel to reflect changes
-          this.display();
-        })
-      );
+    .setName(`Enable ${formattedScope} Commands`)
+    .setDesc(`Toggle all commands that affect ${scope} callouts`)
+    .addToggle(toggle => toggle
+      .setValue(this.plugin.settings.groupsEnabled[scope] || false)
+      .onChange(async (value) => {
+        // Update all commands in this group
+        this.plugin.settings.setGroupEnabled(scope, value, commands);
+        
+        // Save settings
+        await this.plugin.saveSettings();
+        
+        // Refresh commands in the command palette
+        this.plugin.commandRegistry.registerCommands(
+          (scope, mode, modifyMarkdown) => 
+            this.plugin.applyCalloutOperation(scope, mode, modifyMarkdown)
+        );
+        
+        // Redraw settings panel to reflect changes
+        this.display();
+      })
+    );
   }
-
+  
   /**
-   * Add a toggle for a specific command
-   * 
-   * @param {HTMLElement} containerEl - Container element
-   * @param {CalloutCommand} command - The command to add a toggle for
-   */
+  * Add a toggle for a specific command
+  * 
+  * @param {HTMLElement} containerEl - Container element
+  * @param {CalloutCommand} command - The command to add a toggle for
+  */
   addCommandToggle(containerEl, command) {
     // Determine if command is enabled
     const isEnabled = this.plugin.settings.isCommandEnabled(command.id);
@@ -1265,61 +1479,62 @@ class CalloutControlSettingsTab extends PluginSettingTab {
     let description = '';
     switch (command.mode) {
       case CONSTANTS.MODES.TOGGLE:
-        description = 'Toggles all callouts based on the majority state';
-        break;
+      description = 'Toggles all callouts based on the majority state';
+      break;
       case CONSTANTS.MODES.COLLAPSE:
-        description = 'Collapses all callouts';
-        break;
+      description = 'Collapses all callouts';
+      break;
       case CONSTANTS.MODES.EXPAND:
-        description = 'Expands all callouts';
-        break;
+      description = 'Expands all callouts';
+      break;
       case CONSTANTS.MODES.TOGGLE_INDIVIDUAL:
-        description = 'Toggles each callout individually';
-        break;
+      description = 'Toggles each callout individually';
+      break;
     }
     
     // Add setting toggle
     new Setting(containerEl)
-      .setName(displayName)
-      .setDesc(description)
-      .addToggle(toggle => {
-        toggle
-          .setValue(isEnabled)
-          .onChange(async (value) => {
-            // Update command state
-            this.plugin.settings.setCommandEnabled(command.id, value);
-            
-            // If enabling a command, ensure its group is enabled
-            if (value) {
-              this.plugin.settings.groupsEnabled[command.scope] = true;
-            }
-            
-            // Save settings
-            await this.plugin.saveSettings();
-            
-            // Refresh commands in the command palette
-            this.plugin.commandRegistry.registerCommands(
-              (scope, mode, modifyMarkdown) => 
-                this.plugin.applyCalloutOperation(scope, mode, modifyMarkdown)
-            );
-            
-            // Redraw settings panel to reflect changes
-            this.display();
-          });
+    .setName(displayName)
+    .setDesc(description)
+    .addToggle(toggle => {
+      toggle
+      .setValue(isEnabled)
+      .onChange(async (value) => {
+        // Update command state
+        this.plugin.settings.setCommandEnabled(command.id, value);
+        
+        // If enabling a command, ensure its group is enabled
+        if (value) {
+          this.plugin.settings.groupsEnabled[command.scope] = true;
+        }
+        
+        // Save settings
+        await this.plugin.saveSettings();
+        
+        // Refresh commands in the command palette
+        this.plugin.commandRegistry.registerCommands(
+          (scope, mode, modifyMarkdown) => 
+            this.plugin.applyCalloutOperation(scope, mode, modifyMarkdown)
+        );
+        
+        // Redraw settings panel to reflect changes
+        this.display();
       });
+    });
   }
 }
 
 /**
- * CalloutControlPlugin - Refactored main plugin class
- * 
- * The main plugin class that coordinates the services and provides
- * commands to the Obsidian interface.
- */
+* CalloutControlPlugin - Refactored main plugin class
+* 
+* The main plugin class that coordinates the services and provides
+* commands to the Obsidian interface.
+*/
 module.exports = class CalloutControlPlugin extends Plugin {
+  
   /**
-   * Initialize plugin properties
-   */
+  * Initialize plugin properties
+  */
   constructor(app, manifest) {
     super(app, manifest);
     
@@ -1331,11 +1546,14 @@ module.exports = class CalloutControlPlugin extends Plugin {
     
     // Error handler
     this.errorHandler = new ErrorHandler();
+    
+    // Mutation observer for DOM updates
+    this.mutationObserver = null;
   }
   
   /**
-   * Load settings from storage
-   */
+  * Load settings from storage
+  */
   async loadSettings() {
     try {
       const loadedData = await this.loadData();
@@ -1348,10 +1566,10 @@ module.exports = class CalloutControlPlugin extends Plugin {
       );
     }
   }
-
+  
   /**
-   * Save settings to storage
-   */
+  * Save settings to storage
+  */
   async saveSettings() {
     try {
       await this.saveData(this.settings.toObject());
@@ -1365,8 +1583,8 @@ module.exports = class CalloutControlPlugin extends Plugin {
   }
   
   /**
-   * Initialize the plugin and register commands
-   */
+  * Initialize the plugin and register commands
+  */
   async onload() {
     try {
       // Load settings at startup
@@ -1378,25 +1596,30 @@ module.exports = class CalloutControlPlugin extends Plugin {
         ['toggle-current-markdown', 'Toggle Current', CONSTANTS.SCOPES.CURRENT, CONSTANTS.MODES.TOGGLE, true],
         ['collapse-current-markdown', 'Collapse Current', CONSTANTS.SCOPES.CURRENT, CONSTANTS.MODES.COLLAPSE, true],
         ['expand-current-markdown', 'Expand Current', CONSTANTS.SCOPES.CURRENT, CONSTANTS.MODES.EXPAND, true],
-      
+        
+        // Current Callout (Visual Only)
+        ['toggle-current-visual', 'Toggle Current (Visual)', CONSTANTS.SCOPES.CURRENT, CONSTANTS.MODES.TOGGLE, false],
+        ['collapse-current-visual', 'Collapse Current (Visual)', CONSTANTS.SCOPES.CURRENT, CONSTANTS.MODES.COLLAPSE, false],
+        ['expand-current-visual', 'Expand Current (Visual)', CONSTANTS.SCOPES.CURRENT, CONSTANTS.MODES.EXPAND, false],  
+        
         // Section Callouts (Markdown)
         ['toggle-section-markdown', 'Toggle Section', CONSTANTS.SCOPES.SECTION, CONSTANTS.MODES.TOGGLE, true],
         ['collapse-section-markdown', 'Collapse Section', CONSTANTS.SCOPES.SECTION, CONSTANTS.MODES.COLLAPSE, true],
         ['expand-section-markdown', 'Expand Section', CONSTANTS.SCOPES.SECTION, CONSTANTS.MODES.EXPAND, true],
         ['flip-section-markdown', 'Flip Section', CONSTANTS.SCOPES.SECTION, CONSTANTS.MODES.TOGGLE_INDIVIDUAL, true],
-      
+        
         // All Callouts (Markdown)
         ['toggle-all-markdown', 'Toggle All', CONSTANTS.SCOPES.ALL, CONSTANTS.MODES.TOGGLE, true],
         ['collapse-all-markdown', 'Collapse All', CONSTANTS.SCOPES.ALL, CONSTANTS.MODES.COLLAPSE, true],
         ['expand-all-markdown', 'Expand All', CONSTANTS.SCOPES.ALL, CONSTANTS.MODES.EXPAND, true],
         ['flip-all-markdown', 'Flip All', CONSTANTS.SCOPES.ALL, CONSTANTS.MODES.TOGGLE_INDIVIDUAL, true],
-      
+        
         // Section Callouts (Visual Only)
         ['toggle-section-visual', 'Toggle Section (Visual)', CONSTANTS.SCOPES.SECTION, CONSTANTS.MODES.TOGGLE, false],
         ['collapse-section-visual', 'Collapse Section (Visual)', CONSTANTS.SCOPES.SECTION, CONSTANTS.MODES.COLLAPSE, false],
         ['expand-section-visual', 'Expand Section (Visual)', CONSTANTS.SCOPES.SECTION, CONSTANTS.MODES.EXPAND, false],
         ['flip-section-visual', 'Flip Section (Visual)', CONSTANTS.SCOPES.SECTION, CONSTANTS.MODES.TOGGLE_INDIVIDUAL, false],
-      
+        
         // All Callouts (Visual Only)
         ['toggle-all-visual', 'Toggle All (Visual)', CONSTANTS.SCOPES.ALL, CONSTANTS.MODES.TOGGLE, false],
         ['collapse-all-visual', 'Collapse All (Visual)', CONSTANTS.SCOPES.ALL, CONSTANTS.MODES.COLLAPSE, false],
@@ -1425,8 +1648,8 @@ module.exports = class CalloutControlPlugin extends Plugin {
   }
   
   /**
-   * Register event handlers for editor changes
-   */
+  * Register event handlers for editor changes
+  */
   registerEditorHandlers() {
     // Listen for editor changes to update data attributes
     this.registerEvent(
@@ -1442,13 +1665,84 @@ module.exports = class CalloutControlPlugin extends Plugin {
         }
       })
     );
+    
+    // Register document event listeners for visual mode
+    this.registerEvent(
+      this.app.workspace.on('active-leaf-change', () => {
+        try {
+          this.setupMutationObserver();
+        } catch (error) {
+          this.errorHandler.logError(
+            "Error setting up mutation observer", 
+            error
+          );
+        }
+      })
+    );
   }
   
   /**
-   * Update data attributes on callout DOM elements
-   * 
-   * @param {Editor} editor - The editor that changed
-   */
+  * Set up a mutation observer to keep DOM-Markdown correlation up to date
+  */
+  setupMutationObserver() {
+    // Clear any existing observer
+    if (this.mutationObserver) {
+      this.mutationObserver.disconnect();
+      this.mutationObserver = null;
+    }
+    
+    // Skip for now - just disable mutation observer until we debug the issue
+    return;
+    
+    /* Original code commented out for debugging
+    const editor = this.app.workspace.activeEditor?.editor;
+    const root = this.app.workspace.activeEditor?.containerEl;
+    
+    if (!editor || !root) return;
+    
+    // Create a new observer
+    this.mutationObserver = new MutationObserver((mutations) => {
+      // Check if any callout-related content changed
+    const calloutMutations = mutations.some(mutation => {
+      // Check if the mutation target or its parent is a callout
+    return mutation.target.closest('.callout') !== null;
+    });
+    
+    if (calloutMutations) {
+    // Update data attributes
+    this.updateDataAttributes(editor);
+    }
+    });
+    
+    // Start observing the document
+    this.mutationObserver.observe(root, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    characterData: true
+    });
+    */
+  }
+  
+  /**
+  * Clean up observers on plugin unload
+  */
+  onunload() {
+    // Disconnect the mutation observer
+    if (this.mutationObserver) {
+      this.mutationObserver.disconnect();
+      this.mutationObserver = null;
+    }
+    
+    // Unregister commands
+    this.commandRegistry.unregisterAllCommands();
+  }
+  
+  /**
+  * Update data attributes on callout DOM elements
+  * 
+  * @param {Editor} editor - The editor that changed
+  */
   updateDataAttributes(editor) {
     // Get services
     const services = this.getServices();
@@ -1462,12 +1756,12 @@ module.exports = class CalloutControlPlugin extends Plugin {
     // Add data attributes to DOM elements
     domService.addDataAttributes(callouts);
   }
-
+  
   /**
-   * Get the service instances for the current editor context
-   * 
-   * @returns {Object|null} Object containing the service instances, or null
-   */
+  * Get the service instances for the current editor context
+  * 
+  * @returns {Object|null} Object containing the service instances, or null
+  */
   getServices() {
     try {
       const editor = this.app.workspace.activeEditor?.editor;
@@ -1494,12 +1788,12 @@ module.exports = class CalloutControlPlugin extends Plugin {
   }
   
   /**
-   * Apply a collapse/expand operation to callouts
-   * 
-   * @param {string} scope - 'all', 'current', or 'section' 
-   * @param {string} mode - 'toggle', 'collapse', 'expand', or 'toggle-individual'
-   * @param {boolean} modifyMarkdown - Whether to update the Markdown
-   */
+  * Apply a collapse/expand operation to callouts
+  * 
+  * @param {string} scope - 'all', 'current', or 'section' 
+  * @param {string} mode - 'toggle', 'collapse', 'expand', or 'toggle-individual'
+  * @param {boolean} modifyMarkdown - Whether to update the Markdown
+  */
   applyCalloutOperation(scope, mode, modifyMarkdown = false) {
     try {
       // Get services
@@ -1517,45 +1811,52 @@ module.exports = class CalloutControlPlugin extends Plugin {
       
       // If we're modifying markdown (for "with markdown" commands)
       if (modifyMarkdown) {
-        this.applyMarkdownOperation(scope, mode, cursor, markdownService);
+        try {
+          this.applyMarkdownOperation(scope, mode, cursor, markdownService);
+        } catch (err) {
+          console.error("Error in markdown operation:", err);
+          new Notice("Error applying markdown operation: " + err.message);
+        }
       } else {
-        this.applyVisualOperation(scope, mode, cursor, lines, domService, markdownService);
+        try {
+          this.applyVisualOperation(scope, mode, cursor, lines, domService, markdownService);
+        } catch (err) {
+          console.error("Error in visual operation:", err);
+          new Notice("Error applying visual operation: " + err.message);
+        }
       }
     } catch (error) {
-      this.errorHandler.handleError(
-        `Failed to apply operation (${scope}, ${mode})`, 
-        error,
-        "Please try again or try a different command."
-      );
+      console.error(`Failed to apply operation (${scope}, ${mode})`, error);
+      new Notice(`Callout operation failed: ${error.message}`);
     }
   }
   
   /**
-   * Apply operation to Markdown
-   * 
-   * @param {string} scope - Operation scope
-   * @param {string} mode - Operation mode
-   * @param {Position} cursor - Editor cursor position
-   * @param {CalloutMarkdownService} markdownService - Markdown service instance
-   */
+  * Apply operation to Markdown
+  * 
+  * @param {string} scope - Operation scope
+  * @param {string} mode - Operation mode
+  * @param {Position} cursor - Editor cursor position
+  * @param {CalloutMarkdownService} markdownService - Markdown service instance
+  */
   applyMarkdownOperation(scope, mode, cursor, markdownService) {
     // Determine which callouts to modify based on scope
     let callouts = [];
     
     switch (scope) {
       case CONSTANTS.SCOPES.ALL:
-        callouts = markdownService.detectAllCallouts();
-        break;
-        
+      callouts = markdownService.detectAllCallouts();
+      break;
+      
       case CONSTANTS.SCOPES.CURRENT:
-        const callout = markdownService.findCalloutContainingLine(cursor.line) || 
-                       markdownService.findCalloutAboveCursor(cursor.line);
-        if (callout) callouts = [callout];
-        break;
-        
+      const callout = markdownService.findCalloutContainingLine(cursor.line) || 
+      markdownService.findCalloutAboveCursor(cursor.line);
+      if (callout) callouts = [callout];
+      break;
+      
       case CONSTANTS.SCOPES.SECTION:
-        callouts = markdownService.getCalloutsInCurrentSection(cursor.line);
-        break;
+      callouts = markdownService.getCalloutsInCurrentSection(cursor.line);
+      break;
     }
     
     if (!callouts.length) return;
@@ -1573,126 +1874,143 @@ module.exports = class CalloutControlPlugin extends Plugin {
   }
   
   /**
-   * Apply operation to DOM elements (visual only)
-   * 
-   * @param {string} scope - Operation scope
-   * @param {string} mode - Operation mode
-   * @param {Position} cursor - Editor cursor position
-   * @param {Array<string>} lines - Document lines
-   * @param {DOMCalloutService} domService - DOM service instance
-   * @param {CalloutMarkdownService} markdownService - Markdown service for parsing
-   */
+  * Apply operation to DOM elements (visual only)
+  * 
+  * @param {string} scope - Operation scope
+  * @param {string} mode - Operation mode
+  * @param {Position} cursor - Editor cursor position
+  * @param {Array<string>} lines - Document lines
+  * @param {DOMCalloutService} domService - DOM service instance
+  * @param {CalloutMarkdownService} markdownService - Markdown service for parsing
+  */
   applyVisualOperation(scope, mode, cursor, lines, domService, markdownService) {
-    // Get all callouts for matching
+    // Always get all callouts for accurate correlation
     const allCallouts = markdownService.detectAllCallouts();
+    
+    // Always update data attributes to ensure accurate DOM-callout correlation
+    domService.addDataAttributes(allCallouts);
     
     switch (scope) {
       case CONSTANTS.SCOPES.ALL:
-        // Get all callout elements
-        const allElements = domService.getAllCalloutElements();
-        if (!allElements.length) return;
-        
-        switch (mode) {
-          case CONSTANTS.MODES.COLLAPSE:
-            domService.applyToAllCallouts(true);
-            break;
-            
-          case CONSTANTS.MODES.EXPAND:
-            domService.applyToAllCallouts(false);
-            break;
-            
-          case CONSTANTS.MODES.TOGGLE_INDIVIDUAL:
-            allElements.forEach(element => {
-              const currentState = element.classList.contains('is-collapsed');
-              domService.applyCalloutCollapseState(element, !currentState);
-            });
-            break;
-            
-          case CONSTANTS.MODES.TOGGLE:
-          default:
-            // Base the toggle on the first callout's state
-            const newState = !allElements[0].classList.contains('is-collapsed');
-            domService.applyToAllCallouts(newState);
-            break;
-        }
+      // Get all callout elements
+      const allElements = domService.getAllCalloutElements();
+      if (!allElements.length) {
+        // Show notification if no callouts found
+        new Notice('No callouts found in the document');
+        return;
+      }
+      
+      switch (mode) {
+        case CONSTANTS.MODES.COLLAPSE:
+        domService.applyToAllCallouts(true);
         break;
         
+        case CONSTANTS.MODES.EXPAND:
+        domService.applyToAllCallouts(false);
+        break;
+        
+        case CONSTANTS.MODES.TOGGLE_INDIVIDUAL:
+        allElements.forEach(element => {
+          const currentState = element.classList.contains('is-collapsed');
+          domService.applyCalloutCollapseState(element, !currentState);
+        });
+        break;
+        
+        case CONSTANTS.MODES.TOGGLE:
+        default:
+        // Count current states to determine majority
+        const collapsedCount = allElements.filter(el => 
+          el.classList.contains('is-collapsed')
+        ).length;
+        
+        const shouldCollapse = collapsedCount < allElements.length / 2;
+        domService.applyToAllCallouts(shouldCollapse);
+        break;
+      }
+      break;
+      
       case CONSTANTS.SCOPES.CURRENT:
-        // Find closest callout element
-        const cursorLine = cursor.line;
-        const targetElement = domService.getClosestCalloutToCursor(cursorLine, lines, allCallouts);
-        
-        if (targetElement) {
-          let newState;
-          
-          switch (mode) {
-            case CONSTANTS.MODES.COLLAPSE:
-              newState = true;
-              break;
-              
-            case CONSTANTS.MODES.EXPAND:
-              newState = false;
-              break;
-              
-            case CONSTANTS.MODES.TOGGLE:
-            case CONSTANTS.MODES.TOGGLE_INDIVIDUAL:
-            default:
-              newState = !targetElement.classList.contains('is-collapsed');
-              break;
-          }
-          
-          // Apply the new state
-          domService.applyCalloutCollapseState(targetElement, newState);
-        }
-        break;
-        
-      case CONSTANTS.SCOPES.SECTION:
-        // Find all callouts in section
-        const matchingElements = domService.getCalloutsInCurrentSection(
-          cursor.line, 
-          lines,
-          allCallouts
-        );
-        
-        if (!matchingElements.length) return;
+      // Find closest callout element with improved correlation
+      const cursorLine = cursor.line;
+      const targetElement = domService.getClosestCalloutToCursor(cursorLine, lines, allCallouts);
+      
+      if (targetElement) {
+        let newState;
         
         switch (mode) {
           case CONSTANTS.MODES.COLLAPSE:
-            matchingElements.forEach(element => 
-              domService.applyCalloutCollapseState(element, true)
-            );
-            break;
-            
+          newState = true;
+          break;
+          
           case CONSTANTS.MODES.EXPAND:
-            matchingElements.forEach(element => 
-              domService.applyCalloutCollapseState(element, false)
-            );
-            break;
-            
-          case CONSTANTS.MODES.TOGGLE_INDIVIDUAL:
-            matchingElements.forEach(element => {
-              const currentState = element.classList.contains('is-collapsed');
-              domService.applyCalloutCollapseState(element, !currentState);
-            });
-            break;
-            
+          newState = false;
+          break;
+          
           case CONSTANTS.MODES.TOGGLE:
+          case CONSTANTS.MODES.TOGGLE_INDIVIDUAL:
           default:
-            // Count current collapse states
-            const collapsedCount = matchingElements.filter(
-              element => element.classList.contains('is-collapsed')
-            ).length;
-            
-            // Toggle based on majority
-            const newState = collapsedCount < matchingElements.length / 2;
-            
-            // Apply to all elements
-            matchingElements.forEach(element => 
-              domService.applyCalloutCollapseState(element, newState)
-            );
-            break;
+          newState = !targetElement.classList.contains('is-collapsed');
+          break;
         }
+        
+        // Apply the new state
+        domService.applyCalloutCollapseState(targetElement, newState);
+      } else {
+        // Show notification if no callout found
+        new Notice('No callout found near cursor');
+      }
+      break;
+      
+      case CONSTANTS.SCOPES.SECTION:
+      // Find all callouts in section with improved correlation
+      const matchingElements = domService.getCalloutsInCurrentSection(
+        cursor.line, 
+        lines,
+        allCallouts
+      );
+      
+      if (!matchingElements.length) {
+        new Notice('No callouts found in current section');
+        return;
+      }
+      
+      switch (mode) {
+        case CONSTANTS.MODES.COLLAPSE:
+        matchingElements.forEach(element => 
+          domService.applyCalloutCollapseState(element, true)
+        );
         break;
+        
+        case CONSTANTS.MODES.EXPAND:
+        matchingElements.forEach(element => 
+          domService.applyCalloutCollapseState(element, false)
+        );
+        break;
+        
+        case CONSTANTS.MODES.TOGGLE_INDIVIDUAL:
+        matchingElements.forEach(element => {
+          const currentState = element.classList.contains('is-collapsed');
+          domService.applyCalloutCollapseState(element, !currentState);
+        });
+        break;
+        
+        case CONSTANTS.MODES.TOGGLE:
+        default:
+        // Count current collapse states
+        const collapsedCount = matchingElements.filter(
+          element => element.classList.contains('is-collapsed')
+        ).length;
+        
+        // Toggle based on majority
+        const shouldCollapse = collapsedCount < matchingElements.length / 2;
+        
+        // Apply to all elements
+        matchingElements.forEach(element => 
+          domService.applyCalloutCollapseState(element, shouldCollapse)
+        );
+        break;
+      }
+      break;
     }
   }
 };

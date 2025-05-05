@@ -9,6 +9,9 @@
 - New `Callout` class with improved object model
 - Factory function for callout operations
 - Structured error handling and logging
+- Smart callout identification with position tracking
+- User feedback notifications when operations succeed/fail
+- Content similarity detection for callouts with identical text
 
 ### Changed
 - Major code refactoring into modular classes:
@@ -25,18 +28,14 @@
   - "Toggle All Callouts (Individually)" is now "Flip All"
   - Added consistent naming across all command groups
 - Optimized DOM operations for better performance
-
-### Removed
-- Visual-only commands for current callout scope:
-  - "Toggle Current Callout (Visual Only)"
-  - "Collapse Current Callout (Visual Only)" 
-  - "Expand Current Callout (Visual Only)"
-- These were consolidated into the Markdown versions which provide both visual and Markdown updates
+- Enhanced callout targeting when multiple callouts have the same text
+- Improved existing Visual-only commands to work correctly with identical callouts
 
 ### Fixed
 - More reliable correlation between markdown and visual elements
 - Better handling of edge cases with off-screen callouts
 - Improved error handling to prevent crashes
+- Fixed issues with callout identification when multiple callouts have identical text
 
 ## [1.0.2] - 2024-05-01
 
