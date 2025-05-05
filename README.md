@@ -2,9 +2,9 @@
 
 ![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Obsidian v1.5+](https://img.shields.io/badge/obsidian-1.5%2B-blueviolet)
-![Release v1.0.2](https://img.shields.io/badge/release-v1.0.2-green)
+![Release v1.0.3](https://img.shields.io/badge/release-v1.0.3-green)
 
-> Control callouts with keyboard shortcuts in Obsidian's Live Preview mode
+> Toggle, collapse, and expand callouts with keyboard shortcuts in Obsidian
 
 **Callout Control** lets you quickly toggle, collapse, or expand Obsidian callouts using keyboard commands—making your notes cleaner and your workflow faster.
 
@@ -12,7 +12,7 @@
 
 1. Install the plugin from GitHub (see [Installation](#-installation) below)
 2. Enable it in Community Plugins
-3. Open a note with callouts in Live Preview mode
+3. Open a note with callouts in Obsidian
 4. Use the Command Palette (`Ctrl/Cmd+P`) and search for "Callout Control"
 5. Try the "Toggle Current Callout" command when your cursor is near a callout
 
@@ -30,6 +30,7 @@
 - [Compatibility](#-compatibility)
 - [Support](#-support)
 - [License](#-license)
+- [Changelog](#-changelog)
 
 ## ✨ Features
 
@@ -90,6 +91,16 @@ This plugin works with both standard Obsidian callouts and any custom callouts y
 
 Callout Control provides commands that affect callouts at different scopes, with options for both visual-only changes and Markdown updates.
 
+### Command Organization
+
+The plugin organizes commands by two main factors:
+1. **Scope** - which callouts are affected (Current, Section, or All)
+2. **Modification Type** - how changes are applied:
+   - **Markdown commands** - update both the visual state and the underlying Markdown
+   - **Visual-only commands** - only change the appearance without altering your document
+
+Each command is available in the Command Palette with a descriptive name indicating its scope and behavior.
+
 ### Available Commands
 
 The following commands are available in the plugin:
@@ -123,12 +134,6 @@ The following commands are available in the plugin:
 - **Expand All (Visual)**: Expand all callouts in the document (visual mode only).
 - **Flip All (Visual)**: Toggle the collapse state of each callout individually in the document (visual mode only).
 
-### Command Actions
-
-- **Toggle Uniformly**: Sets all affected callouts to the same state (based on the majority state)
-- **Collapse/Expand**: Sets all affected callouts to collapsed or expanded state
-- **Flip Individually**: Toggles each callout to its opposite state (expanded becomes collapsed, and vice versa)
-
 ## 🔄 Toggle Behavior
 
 ### Uniform Toggle
@@ -149,17 +154,8 @@ This behavior is used by the **Flip** commands.
 
 ## 📊 Examples
 
-### Toggle All Callouts Uniformly
-![Toggle All Callouts Uniform](https://github.com/MikeDSmith/obsidian-callout-control/raw/main/demo/toggle-all-uniform.gif)
-
-### Flip All Callouts Individually
-![Flip All Callouts Individual](https://github.com/MikeDSmith/obsidian-callout-control/raw/main/demo/toggle-all-individual.gif)
-
-### Toggle Current Callout
-![Toggle Current Callout](https://github.com/MikeDSmith/obsidian-callout-control/raw/main/demo/toggle-current.gif)
-
-### Toggle Section Callouts
-![Toggle Section Callouts](https://github.com/MikeDSmith/obsidian-callout-control/raw/main/demo/toggle-section.gif)
+### Callout Control in Action
+![Callout Control Demo](https://github.com/MikeDSmith/obsidian-callout-control/raw/main/demo/toggle-all-uniform.gif)
 
 ## ⚙️ Configuration
 
@@ -167,16 +163,24 @@ Callout Control includes a settings panel that allows you to enable or disable s
 
 ### Settings Panel
 
-To access the settings panel:
-1. Go to **Settings → Community Plugins → Callout Control → Settings**
-2. Use the toggles to enable or disable specific commands or entire command groups
+The settings panel is organized for easy navigation and customization:
 
-The settings panel organizes commands into three main groups:
-- **Current:** Commands that affect the callout under your cursor
-- **Section:** Commands that affect callouts in the current section  
-- **All:** Commands that affect all callouts in the document
+1. **Group Structure**:
+   - Commands are organized into three expandable groups: Current, Section, and All
+   - Each group has a description explaining which callouts will be affected
+   - Groups can be enabled/disabled as a whole with a single toggle
 
-Each group has toggles for both Visual and Markdown commands, allowing you to customize exactly which commands appear in your Command Palette.
+2. **Command Toggles**:
+   - Within each group, individual commands have their own toggles
+   - Commands are separated into Markdown and Visual-only categories 
+   - Each command has a description explaining exactly what it does
+
+3. **Interface Features**:
+   - Visual grouping with borders to clearly separate different command categories
+   - Enable/disable many commands at once with group toggles
+   - Changes take effect immediately, updating the Command Palette in real-time
+
+To find the settings panel, go to **Settings → Community Plugins → Callout Control → Settings**.
 
 > **Note for Hotkey Users:** Commands that are disabled in the settings panel will not appear in the Command Palette or in the hotkeys list. When setting up hotkeys (see [Setting Up Hotkeys](#setting-up-hotkeys) above), ensure the commands you want to use are enabled here first.
 
@@ -198,9 +202,9 @@ The plugin works with nested callouts by operating on the parent callout only. W
 
 ### Common Issues
 
-1. **Commands not working in Source mode**
-   - Visual toggling works only in Live Preview mode
-   - Markdown-updating commands work in any editing mode
+1. **Commands not working in certain modes**
+   - Markdown-updating commands work in Live Preview and Source modes
+   - Visual toggling works in Live Preview and Reading View modes
 
 2. **Not all callouts are toggled**
    - Due to Obsidian's virtual scrolling, off-screen callouts must be scrolled into view
@@ -216,8 +220,8 @@ The plugin works with nested callouts by operating on the parent callout only. W
 ## ✅ Compatibility
 
 - Requires Obsidian **v1.5+**
-- Visual toggle functionality works in **Live Preview** mode only
-- Markdown-updating functionality works in all editing modes
+- Markdown-updating functionality works in **Live Preview** and **Source** modes
+- Visual toggle functionality works in **Live Preview** and **Reading View** modes
 
 ## 🙋 Support
 
@@ -226,6 +230,10 @@ The plugin works with nested callouts by operating on the parent callout only. W
 ## 📝 License
 
 [MIT License](LICENSE)
+
+## 📋 Changelog
+
+See the full [Changelog](CHANGELOG.md) for detailed version history.
 
 ---
 
