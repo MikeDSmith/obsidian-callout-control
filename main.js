@@ -1221,11 +1221,10 @@ registerCommands(operationHandler) {
   // Register each enabled command
   this.commands.forEach(command => {
     if (this.settings.isCommandEnabled(command.id)) {
-      const fullId = `callout-control.${command.id}`;
-      this.registeredIds.push(fullId);
+      this.registeredIds.push(command.id);
       
       this.plugin.addCommand({
-        id: fullId,
+        id: command.id,  // <-- Use command.id directly without the plugin prefix
         name: command.name,
         callback: () => command.execute(operationHandler)
       });
@@ -1608,17 +1607,17 @@ module.exports = class CalloutControlPlugin extends Plugin {
         ['expand-section-markdown', 'Expand Section', CONSTANTS.SCOPES.SECTION, CONSTANTS.MODES.EXPAND, true],
         ['flip-section-markdown', 'Flip Section', CONSTANTS.SCOPES.SECTION, CONSTANTS.MODES.TOGGLE_INDIVIDUAL, true],
         
-        // All Callouts (Markdown)
-        ['toggle-all-markdown', 'Toggle All', CONSTANTS.SCOPES.ALL, CONSTANTS.MODES.TOGGLE, true],
-        ['collapse-all-markdown', 'Collapse All', CONSTANTS.SCOPES.ALL, CONSTANTS.MODES.COLLAPSE, true],
-        ['expand-all-markdown', 'Expand All', CONSTANTS.SCOPES.ALL, CONSTANTS.MODES.EXPAND, true],
-        ['flip-all-markdown', 'Flip All', CONSTANTS.SCOPES.ALL, CONSTANTS.MODES.TOGGLE_INDIVIDUAL, true],
-        
         // Section Callouts (Visual Only)
         ['toggle-section-visual', 'Toggle Section (Visual)', CONSTANTS.SCOPES.SECTION, CONSTANTS.MODES.TOGGLE, false],
         ['collapse-section-visual', 'Collapse Section (Visual)', CONSTANTS.SCOPES.SECTION, CONSTANTS.MODES.COLLAPSE, false],
         ['expand-section-visual', 'Expand Section (Visual)', CONSTANTS.SCOPES.SECTION, CONSTANTS.MODES.EXPAND, false],
         ['flip-section-visual', 'Flip Section (Visual)', CONSTANTS.SCOPES.SECTION, CONSTANTS.MODES.TOGGLE_INDIVIDUAL, false],
+        
+        // All Callouts (Markdown)
+        ['toggle-all-markdown', 'Toggle All', CONSTANTS.SCOPES.ALL, CONSTANTS.MODES.TOGGLE, true],
+        ['collapse-all-markdown', 'Collapse All', CONSTANTS.SCOPES.ALL, CONSTANTS.MODES.COLLAPSE, true],
+        ['expand-all-markdown', 'Expand All', CONSTANTS.SCOPES.ALL, CONSTANTS.MODES.EXPAND, true],
+        ['flip-all-markdown', 'Flip All', CONSTANTS.SCOPES.ALL, CONSTANTS.MODES.TOGGLE_INDIVIDUAL, true],
         
         // All Callouts (Visual Only)
         ['toggle-all-visual', 'Toggle All (Visual)', CONSTANTS.SCOPES.ALL, CONSTANTS.MODES.TOGGLE, false],
