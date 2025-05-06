@@ -57,7 +57,7 @@
 ### Manual Installation (GitHub)
 
 1. Download the [latest release](https://github.com/MikeDSmith/obsidian-callout-control/releases)
-2. Create a folder in your vault's plugin directory: `.obsidian/plugins/obsidian-callout-control/`
+2. Create a folder in your vault's plugin directory: `.obsidian/plugins/callout-control/`
 3. Extract `main.js` and `manifest.json` into that folder
 4. In Obsidian, go to **Settings → Community Plugins**, click **Reload plugins** and enable **Callout Control**
 
@@ -216,9 +216,10 @@ The plugin works with nested callouts by operating on the parent callout only. W
    - Markdown-updating commands work in Live Preview and Source modes
    - Visual toggling works in Live Preview and Reading View modes
 
-2. **Not all callouts are toggled**
-   - Due to Obsidian's virtual scrolling, off-screen callouts must be scrolled into view
-   - Use Markdown-updating commands to affect all callouts regardless of scroll position
+2. **Visual commands don't affect all callouts**
+   - Due to Obsidian's virtual scrolling optimization, visual commands only affect callouts currently rendered in the viewport
+   - Off-screen callouts must be scrolled into view to be affected
+   - Use Markdown-updating commands instead to modify all callouts regardless of scroll position
 
 3. **Commands not appearing in Command Palette or Hotkeys**
    - Check that the commands are enabled in the [Configuration](#-configuration) settings panel
